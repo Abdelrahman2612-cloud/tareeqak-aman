@@ -8,11 +8,6 @@
     "scheme": "tareeqakaman",
     "userInterfaceStyle": "light",
     "backgroundColor": "#0A1A2E",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A1A2E"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tareeqakaman.app"
@@ -41,6 +36,24 @@
         {
           "photosPermission": "التطبيق يحتاج الوصول للصور عشان ترفق صورة للبلاغ.",
           "cameraPermission": "التطبيق يحتاج الكاميرا عشان تصور المشكلة."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0A1A2E"
         }
       ]
     ]

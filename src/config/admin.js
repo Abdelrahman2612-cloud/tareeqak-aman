@@ -1,2 +1,2 @@
 // رقم دخول لوحة تحكم المشرفين — غيّره لأي رقم يعجبك
-export const ADMIN_PIN = '1234';
+export const ADMIN_PIN = '2612';
