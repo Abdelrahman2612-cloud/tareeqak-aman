@@ -8,12 +8,12 @@
 // ============================================================
 
 export const firebaseConfig = {
-  apiKey: 'PASTE_API_KEY_HERE',
-  authDomain: 'PASTE_PROJECT_ID.firebaseapp.com',
-  projectId: 'PASTE_PROJECT_ID_HERE',
-  storageBucket: 'PASTE_PROJECT_ID.appspot.com',
-  messagingSenderId: 'PASTE_SENDER_ID_HERE',
-  appId: 'PASTE_APP_ID_HERE',
+  apiKey: 'AIzaSyBIADXHGuF5wNpQBrZUpsvC2HMesjbdQAc',
+  authDomain: 'tareeqak-aman-bfebc.firebaseapp.com',
+  projectId: 'tareeqak-aman-bfebc',
+  storageBucket: 'tareeqak-aman-bfebc.firebasestorage.app',
+  messagingSenderId: '430208454464',
+  appId: '1:430208454464:web:ed5258d54e36786efbb4a5',
 };
 
 export function isFirebaseConfigured() {
