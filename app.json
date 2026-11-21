@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "طريقك أمان",
+    "slug": "tareeqak-aman",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "tareeqakaman",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#0A1A2E",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A1A2E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tareeqakaman.app"
+    },
+    "android": {
+      "package": "com.tareeqakaman.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A1A2E"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "التطبيق يحتاج موقعك عشان يحدد مكان البلاغ على الخريطة."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "التطبيق يحتاج الوصول للصور عشان ترفق صورة للبلاغ.",
+          "cameraPermission": "التطبيق يحتاج الكاميرا عشان تصور المشكلة."
+        }
+      ]
+    ]
+  }
+}
