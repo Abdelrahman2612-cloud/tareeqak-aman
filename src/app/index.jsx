@@ -115,7 +115,7 @@ export default function HomeScreen() {
             <View style={styles.brandWrap}>
               {/* دخول المشرفين مخفي: ضغطة مطوّلة على علامة التطبيق */}
               <Pressable onLongPress={() => router.push('/admin')} delayLongPress={1500}>
-                <Image source={require('../assets/brand-mark.png')} style={styles.brandMark} />
+                <Image source={require('../../assets/brand-mark.png')} style={styles.brandMark} />
               </Pressable>
               <View>
                 <T style={styles.brandName}>طريقك أمان</T>
