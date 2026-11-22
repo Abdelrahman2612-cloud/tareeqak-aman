@@ -111,10 +111,17 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.heroBadge}>
-            <T style={styles.heroBadgeIcon}>📍</T>
-          </View>
-          <T style={styles.heroTitle}>طريقك أمان</T>
+          {/* دخول المشرفين مخفي: ضغطة مطوّلة على اللوجو/الاسم */}
+          <Pressable
+            onLongPress={() => router.push('/admin')}
+            delayLongPress={1500}
+            style={{ alignItems: 'center' }}
+          >
+            <View style={styles.heroBadge}>
+              <T style={styles.heroBadgeIcon}>📍</T>
+            </View>
+            <T style={styles.heroTitle}>طريقك أمان</T>
+          </Pressable>
           <T style={styles.heroSub}>بلّغ عن مشاكل الطريق وتابع إصلاحها لحد ما تتحل</T>
 
           <Pressable
@@ -178,12 +185,6 @@ export default function HomeScreen() {
             title="تتبع بلاغ"
             subtitle="برقمه المرجعي"
             onPress={() => router.push('/track')}
-          />
-          <Shortcut
-            icon="🛠️"
-            title="المشرفين"
-            subtitle="إدارة وتحديث الحالات"
-            onPress={() => router.push('/admin')}
           />
         </View>
 
@@ -392,7 +393,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     ...shadow.card,
   },
-  shortcutIcon: { fontSize: 26, marginBottom: 8 },
+  shortcutIcon: { fontSize: 30, marginBottom: 8 },
   shortcutTitle: { fontSize: 14, fontFamily: FONTS.bold, color: colors.text },
   shortcutSub: { fontSize: 10.5, color: colors.textSoft, marginTop: 3, textAlign: 'center' },
   reportRow: {

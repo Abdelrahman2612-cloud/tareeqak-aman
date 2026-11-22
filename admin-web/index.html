@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>طريقك أمان — لوحة تحكم المشرفين</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  body { font-family: 'Cairo', sans-serif; background: #F4F7FA; color: #0F172A; }
+  .chip { border: 1px solid; }
+  #map { height: 420px; }
+  .leaflet-container { font-family: 'Cairo', sans-serif; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ======= بوابة الرقم السري ======= -->
+<div id="pinGate" class="min-h-screen flex items-center justify-center" style="background:#0A1A2E">
+  <div class="bg-white rounded-2xl shadow-xl p-10 w-full max-w-sm text-center">
+    <div class="text-5xl mb-4">🔐</div>
+    <h1 class="text-2xl font-black mb-1" style="color:#0A1A2E">منطقة المشرفين</h1>
+    <p class="text-sm mb-6" style="color:#64748B">ادخل الرقم السري عشان تكمل</p>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="12" placeholder="••••"
+      class="w-full text-center text-2xl tracking-widest rounded-xl border-2 px-4 py-3 outline-none focus:border-[#376E68]"
+      style="border-color:#E5EAF0" />
+    <p id="pinError" class="hidden text-sm mt-3 font-bold" style="color:#A8554D">الرقم غلط، حاول تاني</p>
+    <button id="pinBtn"
+      class="w-full mt-5 rounded-xl py-3 text-white text-lg font-bold transition hover:opacity-90"
+      style="background:#376E68">دخول</button>
+  </div>
+</div>
+
+<!-- ======= اللوحة ======= -->
+<div id="dashboard" class="hidden">
+  <header class="py-5 px-6 flex items-center justify-between" style="background:#0A1A2E">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">📍</span>
+      <h1 class="text-white text-xl font-black">طريقك أمان — لوحة تحكم المشرفين</h1>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="tabReports" class="text-white text-sm font-bold px-4 py-2 rounded-lg" style="background:#376E68">البلاغات</button>
+      <button id="tabMap" class="text-white text-sm font-bold px-4 py-2 rounded-lg" style="background:#1B3A5C">الخريطة</button>
+      <button id="logoutBtn" class="text-sm px-3 py-2 rounded-lg" style="color:#B8C7D9">خروج</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6">
+    <!-- إحصائيات -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-5 text-center shadow-sm border" style="border-color:#E5EAF0">
+        <div id="stTotal" class="text-3xl font-black" style="color:#0A1A2E">…</div>
+        <div class="text-sm mt-1" style="color:#64748B">كل البلاغات</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 text-center shadow-sm border" style="border-color:#E5EAF0">
+        <div id="stNew" class="text-3xl font-black" style="color:#A8554D">…</div>
+        <div class="text-sm mt-1" style="color:#64748B">جديدة</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 text-center shadow-sm border" style="border-color:#E5EAF0">
+        <div id="stProg" class="text-3xl font-black" style="color:#A3853F">…</div>
+        <div class="text-sm mt-1" style="color:#64748B">قيد العمل</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 text-center shadow-sm border" style="border-color:#E5EAF0">
+        <div id="stDone" class="text-3xl font-black" style="color:#5F8A75">…</div>
+        <div class="text-sm mt-1" style="color:#64748B">تم الحل</div>
+      </div>
+    </div>
+
+    <h2 class="text-lg font-black mb-3">بلاغات مفتوحة حسب النوع</h2>
+    <div id="catStats" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10"></div>
+
+    <!-- جدول البلاغات -->
+    <div id="viewReports">
+      <h2 class="text-lg font-black mb-3">البلاغات (مرتبة بالأولوية)</h2>
+      <div id="reportsList" class="space-y-3"></div>
+      <p id="emptyState" class="hidden text-center py-10" style="color:#64748B">مفيش بلاغات لسه</p>
+    </div>
+
+    <!-- الخريطة -->
+    <div id="viewMap" class="hidden">
+      <h2 class="text-lg font-black mb-3">البلاغات على الخريطة</h2>
+      <div id="map" class="rounded-2xl border shadow-sm" style="border-color:#E5EAF0"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ======= إعدادات Firebase (نفس مشروع التطبيق) =======
+const firebaseConfig = {
+  apiKey: 'AIzaSyBIADXHGuF5wNpQBrZUpsvC2HMesjbdQAc',
+  authDomain: 'tareeqak-aman-bfebc.firebaseapp.com',
+  projectId: 'tareeqak-aman-bfebc',
+  storageBucket: 'tareeqak-aman-bfebc.firebasestorage.app',
+  messagingSenderId: '430208454464',
+  appId: '1:430208454464:web:ed5258d54e36786efbb4a5',
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ======= بوابة الـ PIN (SHA-256 — ديمو تخرج مش حماية إنتاجية) =======
+const PIN_HASH = 'b6316aa9a0bfcfd8f2f36eae197c78173d893fb9409d12d0f1815a1fe62c89da'; // sha256("2612")
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const gate = document.getElementById('pinGate');
+const dash = document.getElementById('dashboard');
+async function tryPin() {
+  const val = document.getElementById('pinInput').value.trim();
+  if ((await sha256(val)) === PIN_HASH) {
+    sessionStorage.setItem('admin_ok', '1');
+    showDash();
+  } else {
+    document.getElementById('pinError').classList.remove('hidden');
+  }
+}
+document.getElementById('pinBtn').addEventListener('click', tryPin);
+document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem('admin_ok'); location.reload();
+});
+function showDash() { gate.classList.add('hidden'); dash.classList.remove('hidden'); startListening(); }
+if (sessionStorage.getItem('admin_ok') === '1') showDash();
+
+// ======= نفس تعريفات التطبيق =======
+const CATEGORIES = {
+  pothole:  { label: 'حفرة أو تصدعات', icon: '🕳️', color: '#8A6D4F' },
+  bump:     { label: 'مطب',            icon: '🚧', color: '#96604A' },
+  lighting: { label: 'إنارة معطلة',    icon: '💡', color: '#97834A' },
+  water:    { label: 'تراكم مياه',     icon: '🌊', color: '#5E7FA3' },
+  manhole:  { label: 'بالوعة مكشوفة',  icon: '⭕', color: '#7B7194' },
+};
+const STATUS = {
+  new:         { label: 'جديد',     color: '#A8554D', bg: '#F3E7E5', next: 'in_progress', nextLabel: 'تحويل إلى «قيد العمل»' },
+  in_progress: { label: 'قيد العمل', color: '#A3853F', bg: '#F4EDDB', next: 'resolved',    nextLabel: 'تحويل إلى «تم الحل»' },
+  resolved:    { label: 'تم الحل',  color: '#5F8A75', bg: '#E6EDE8', next: null,          nextLabel: null },
+};
+const SEVERITY = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية' };
+const SEV_ORDER = ['high', 'medium', 'low'];
+const fmtDate = ms => ms ? new Intl.DateTimeFormat('ar-EG', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(ms)) : '';
+
+let reports = [];
+let mapObj = null, markersLayer = null;
+
+// ======= استماع حي للبلاغات =======
+function startListening() {
+  db.collection('reports').orderBy('createdAtMillis', 'desc').limit(500)
+    .onSnapshot(snap => {
+      reports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAll();
+    }, err => {
+      document.getElementById('reportsList').innerHTML =
+        '<p class="text-center py-8" style="color:#A8554D">مشكلة في الاتصال بـ Firestore: ' + err.message + '</p>';
+    });
+}
+
+function renderAll() {
+  const open = r => r.status !== 'resolved';
+  document.getElementById('stTotal').textContent = reports.length;
+  document.getElementById('stNew').textContent = reports.filter(r => r.status === 'new').length;
+  document.getElementById('stProg').textContent = reports.filter(r => r.status === 'in_progress').length;
+  document.getElementById('stDone').textContent = reports.filter(r => r.status === 'resolved').length;
+
+  document.getElementById('catStats').innerHTML = Object.entries(CATEGORIES).map(([k, c]) => {
+    const n = reports.filter(r => r.category === k && open(r)).length;
+    return `<div class="bg-white rounded-2xl p-4 text-center shadow-sm chip" style="border-color:${c.color}38;background:${c.color}0D">
+      <div class="text-2xl">${c.icon}</div>
+      <div class="text-2xl font-black mt-1" style="color:${c.color}">${n}</div>
+      <div class="text-xs mt-1" style="color:#64748B">${c.label}</div></div>`;
+  }).join('');
+
+  const sorted = [...reports].sort((a, b) => {
+    const sa = SEV_ORDER.indexOf(a.severity), sb = SEV_ORDER.indexOf(b.severity);
+    if (sa !== sb) return sa - sb;
+    return (b.createdAtMillis || 0) - (a.createdAtMillis || 0);
+  });
+
+  document.getElementById('emptyState').classList.toggle('hidden', sorted.length > 0);
+  document.getElementById('reportsList').innerHTML = sorted.map(r => {
+    const c = CATEGORIES[r.category] || CATEGORIES.pothole;
+    const s = STATUS[r.status] || STATUS.new;
+    return `<div class="bg-white rounded-2xl p-4 shadow-sm border flex flex-wrap items-center gap-4" style="border-color:#E5EAF0">
+      ${r.imageUrl ? `<img src="${r.imageUrl}" class="w-16 h-16 rounded-xl object-cover border" style="border-color:#E5EAF0" />`
+        : `<div class="w-16 h-16 rounded-xl flex items-center justify-center text-3xl chip" style="border-color:${c.color}38;background:${c.color}0D">${c.icon}</div>`}
+      <div class="flex-1 min-w-[200px]">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-black">${c.label}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-bold chip" style="color:${s.color};background:${s.bg};border-color:${s.color}38">${s.label}</span>
+          <span class="text-xs" style="color:#64748B">خطورة ${SEVERITY[r.severity] || r.severity}</span>
+        </div>
+        <div class="text-xs mt-1" style="color:#64748B">${r.trackingCode || ''} · ${fmtDate(r.createdAtMillis)} · ${r.userName || 'ضيف'}</div>
+        ${r.description ? `<div class="text-sm mt-1">${r.description}</div>` : ''}
+      </div>
+      ${s.next ? `<button data-id="${r.id}" data-next="${s.next}"
+        class="advanceBtn text-sm font-bold text-white px-4 py-2 rounded-xl transition hover:opacity-90"
+        style="background:#376E68">${s.nextLabel}</button>` : ''}
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('.advanceBtn').forEach(btn =>
+    btn.addEventListener('click', () => advanceStatus(btn.dataset.id, btn.dataset.next)));
+
+  renderMap();
+}
+
+// ======= تغيير الحالة (نفس شكل كتابة التطبيق: status + statusHistory) =======
+async function advanceStatus(id, next) {
+  const r = reports.find(x => x.id === id);
+  const hist = Array.isArray(r?.statusHistory) ? r.statusHistory : [];
+  await db.collection('reports').doc(id).update({
+    status: next,
+    statusHistory: [...hist, { status: next, at: Date.now() }],
+  });
+}
+
+// ======= الخريطة =======
+function renderMap() {
+  if (document.getElementById('viewMap').classList.contains('hidden')) return;
+  if (!mapObj) {
+    mapObj = L.map('map').setView([30.0444, 31.2357], 11);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapObj);
+    markersLayer = L.layerGroup().addTo(mapObj);
+  }
+  markersLayer.clearLayers();
+  reports.forEach(r => {
+    const lat = r.location?.lat, lng = r.location?.lng;
+    if (lat == null || lng == null) return;
+    const c = CATEGORIES[r.category] || CATEGORIES.pothole;
+    const s = STATUS[r.status] || STATUS.new;
+    L.circleMarker([lat, lng], { radius: 9, color: c.color, weight: 2, fillColor: c.color, fillOpacity: 0.35 })
+      .bindPopup(`<b>${c.icon} ${c.label}</b><br>${r.trackingCode || ''}<br>الحالة: ${s.label}`)
+      .addTo(markersLayer);
+  });
+  setTimeout(() => mapObj.invalidateSize(), 100);
+}
+
+// تبويبات
+document.getElementById('tabReports').addEventListener('click', () => {
+  document.getElementById('viewReports').classList.remove('hidden');
+  document.getElementById('viewMap').classList.add('hidden');
+  document.getElementById('tabReports').style.background = '#376E68';
+  document.getElementById('tabMap').style.background = '#1B3A5C';
+});
+document.getElementById('tabMap').addEventListener('click', () => {
+  document.getElementById('viewMap').classList.remove('hidden');
+  document.getElementById('viewReports').classList.add('hidden');
+  document.getElementById('tabMap').style.background = '#376E68';
+  document.getElementById('tabReports').style.background = '#1B3A5C';
+  renderMap();
+});
+</script>
+</body>
+</html>

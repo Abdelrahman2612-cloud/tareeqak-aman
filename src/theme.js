@@ -3,23 +3,23 @@ export const colors = {
   navy: '#0A1A2E',
   navySoft: '#12263F',
   navyLight: '#1B3A5C',
-  teal: '#0D9488',
-  tealDark: '#0F766E',
-  tealLight: '#14B8A6',
-  tealPale: '#CCFBF1',
+  teal: '#376E68',
+  tealDark: '#2A5651',
+  tealLight: '#55857F',
+  tealPale: '#E4ECEA',
   bg: '#F4F7FA',
   card: '#FFFFFF',
   border: '#E5EAF0',
   text: '#0F172A',
   textSoft: '#64748B',
-  red: '#EF4444',
-  redPale: '#FEE2E2',
-  amber: '#F59E0B',
-  amberPale: '#FEF3C7',
-  green: '#10B981',
-  greenPale: '#D1FAE5',
-  blue: '#3B82F6',
-  bluePale: '#DBEAFE',
+  red: '#A8554D',
+  redPale: '#F3E7E5',
+  amber: '#A3853F',
+  amberPale: '#F4EDDB',
+  green: '#5F8A75',
+  greenPale: '#E6EDE8',
+  blue: '#5E7FA3',
+  bluePale: '#E7ECF2',
   white: '#FFFFFF',
 };
 
@@ -49,11 +49,11 @@ export const STATUS = {
 export const STATUS_ORDER = ['new', 'in_progress', 'resolved'];
 
 export const CATEGORIES = {
-  pothole: { key: 'pothole', label: 'حفرة أو تصدعات', icon: '🕳️', color: '#B45309' },
-  bump: { key: 'bump', label: 'مطب', icon: '🚧', color: '#C2410C' },
-  lighting: { key: 'lighting', label: 'إنارة معطلة', icon: '💡', color: '#A16207' },
-  water: { key: 'water', label: 'تراكم مياه', icon: '🌊', color: '#1D4ED8' },
-  manhole: { key: 'manhole', label: 'بالوعة مكشوفة', icon: '⭕', color: '#7C3AED' },
+  pothole: { key: 'pothole', label: 'حفرة أو تصدعات', icon: '🕳️', color: '#8A6D4F' },
+  bump: { key: 'bump', label: 'مطب', icon: '🚧', color: '#96604A' },
+  lighting: { key: 'lighting', label: 'إنارة معطلة', icon: '💡', color: '#97834A' },
+  water: { key: 'water', label: 'تراكم مياه', icon: '🌊', color: '#5E7FA3' },
+  manhole: { key: 'manhole', label: 'بالوعة مكشوفة', icon: '⭕', color: '#7B7194' },
 };
 export const CATEGORY_KEYS = Object.keys(CATEGORIES);
 

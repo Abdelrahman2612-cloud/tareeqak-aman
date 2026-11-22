@@ -268,10 +268,16 @@ export default function ReportScreen() {
                   <Pressable
                     key={key}
                     onPress={() => setCategory(key)}
-                    style={[styles.catCard, active && styles.catCardActive]}
+                    style={[
+                      styles.catCard,
+                      {
+                        backgroundColor: c.color + (active ? '1A' : '0D'),
+                        borderColor: c.color + (active ? 'CC' : '38'),
+                      },
+                    ]}
                   >
                     <T style={styles.catIcon}>{c.icon}</T>
-                    <T style={[styles.catLabel, active && { color: colors.teal }]}>{c.label}</T>
+                    <T style={[styles.catLabel, active && { color: c.color }]}>{c.label}</T>
                   </Pressable>
                 );
               })}
@@ -471,8 +477,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 6,
   },
-  catCardActive: { borderColor: colors.teal, backgroundColor: colors.tealPale },
-  catIcon: { fontSize: 26 },
+  catIcon: { fontSize: 34 },
   catLabel: { fontSize: 12.5, fontWeight: '700', color: colors.text, textAlign: 'center', writingDirection: 'rtl' },
   sevRow: { flexDirection: 'row-reverse', gap: 10, marginTop: 8 },
   sevChip: {
