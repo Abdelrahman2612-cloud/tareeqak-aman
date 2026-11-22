@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { colors } from '../theme';
+import { T } from './T';
 
 // خريطة Leaflet + OpenStreetMap داخل WebView — مجانية بالكامل ومن غير أي API key
 
@@ -13,16 +14,18 @@ const MAP_HTML = `<!DOCTYPE html>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   html, body, #map { margin:0; padding:0; height:100%; width:100%; background:#E8EEF4; }
-  .pin { width:26px; height:26px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
-         border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,.35); position:relative; }
-  .pin::after { content:''; position:absolute; width:8px; height:8px; background:#fff;
-                border-radius:50%; top:7px; left:7px; }
-  .pick-pin { width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
-              background:#0D9488; border:3px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,.4); }
-  .pick-pin::after { content:''; position:absolute; width:10px; height:10px; background:#fff;
-                     border-radius:50%; top:7px; left:7px; }
+  .pin-wrap { display:flex; flex-direction:column; align-items:center; filter:drop-shadow(0 3px 4px rgba(10,26,46,.4)); }
+  .pin { width:34px; height:34px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+         border:2.5px solid #fff; display:flex; align-items:center; justify-content:center; }
+  .pin span { transform:rotate(45deg); font-size:15px; line-height:1; }
+  .pick-pin { width:36px; height:36px; border-radius:50% 50% 50% 0; transform:rotate(-45deg);
+              background:#0D9488; border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,.45);
+              display:flex; align-items:center; justify-content:center; }
+  .pick-pin span { transform:rotate(45deg); font-size:16px; }
   .me { width:18px; height:18px; border-radius:50%; background:#3B82F6; border:3px solid #fff;
         box-shadow:0 0 0 4px rgba(59,130,246,.25); }
+  @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(239,68,68,.5); } 100% { box-shadow:0 0 0 14px rgba(239,68,68,0); } }
+  .pin-new { animation:pulse 1.6s ease-out infinite; }
   #err { display:none; position:absolute; z-index:999; inset:0; background:#F4F7FA; color:#0F172A;
          font-family:sans-serif; text-align:center; padding-top:45%; font-size:15px; }
 </style>
@@ -34,9 +37,10 @@ const MAP_HTML = `<!DOCTYPE html>
 <script>
 var map = null, markersLayer = null, pickMarker = null, meMarker = null, pickMode = false;
 function send(obj){ if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(obj)); }
-function makeIcon(color, cls){
-  return L.divIcon({ className:'', iconSize:[26,34], iconAnchor:[13,30],
-    html:'<div class="'+(cls||'pin')+'" style="background:'+color+'"></div>' });
+function makeIcon(color, icon, cls){
+  var inner = '<div class="'+(cls||'pin')+'" style="background:'+color+'"><span>'+(icon||'')+'</span></div>';
+  return L.divIcon({ className:'', iconSize:[36,40], iconAnchor:[18,38],
+    html:'<div class="pin-wrap">'+inner+'</div>' });
 }
 function init(){
   if (typeof L === 'undefined') { document.getElementById('err').style.display='block'; return; }
@@ -56,7 +60,7 @@ function init(){
 function setPick(lat, lng){
   if (!map) return;
   if (pickMarker) pickMarker.setLatLng([lat, lng]);
-  else pickMarker = L.marker([lat, lng], { icon: makeIcon('#0D9488','pick-pin'), draggable:true }).addTo(map);
+  else pickMarker = L.marker([lat, lng], { icon: makeIcon('#0D9488','📍','pick-pin'), draggable:true }).addTo(map);
   pickMarker.off('dragend');
   pickMarker.on('dragend', function(){
     var p = pickMarker.getLatLng();
@@ -69,7 +73,8 @@ function handle(msg){
     markersLayer.clearLayers();
     (msg.markers||[]).forEach(function(m){
       if (m.lat == null || m.lng == null) return;
-      var mk = L.marker([m.lat, m.lng], { icon: makeIcon(m.color || '#EF4444') });
+      var cls = m.status === 'new' ? 'pin pin-new' : 'pin';
+      var mk = L.marker([m.lat, m.lng], { icon: makeIcon(m.color || '#EF4444', m.icon || '', cls) });
       mk.on('click', function(){ send({ type:'marker', id:m.id }); });
       markersLayer.addLayer(mk);
     });
@@ -83,7 +88,7 @@ function handle(msg){
     setPick(msg.lat, msg.lng);
   } else if (msg.type === 'me'){
     if (meMarker) map.removeLayer(meMarker);
-    meMarker = L.marker([msg.lat, msg.lng], { icon: makeIcon('#3B82F6','me') }).addTo(map);
+    meMarker = L.marker([msg.lat, msg.lng], { icon: makeIcon('#3B82F6','','me') }).addTo(map);
   }
 }
 function onMsg(e){
@@ -170,7 +175,7 @@ export default function LeafletMap({
       {loading && (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.teal} size="large" />
-          <Text style={styles.loadingText}>بنحمّل الخريطة…</Text>
+          <T style={styles.loadingText}>بنحمّل الخريطة…</T>
         </View>
       )}
     </View>
@@ -186,5 +191,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#E8EEF4',
   },
-  loadingText: { marginTop: 8, color: colors.textSoft, fontSize: 14, writingDirection: 'rtl' },
+  loadingText: { marginTop: 8, color: colors.textSoft, fontSize: 14 },
 });

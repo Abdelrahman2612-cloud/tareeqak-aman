@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
-  Text,
+
   StyleSheet,
   Pressable,
   Modal,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
-import { colors, radius, STATUS, CATEGORIES, CATEGORY_KEYS, SEVERITY, formatDate } from '../theme';
+import { T } from '../components/T';
+import { colors, radius, STATUS, CATEGORIES, CATEGORY_KEYS, SEVERITY, formatDate, FONTS } from '../theme';
 import { listenToReports } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
 import LeafletMap from '../components/LeafletMap';
@@ -57,6 +58,8 @@ export default function MapScreen() {
           lat: r.lat,
           lng: r.lng,
           color: (STATUS[r.status] || STATUS.new).color,
+          icon: CATEGORIES[r.category]?.icon || '',
+          status: r.status,
         })),
     [filtered]
   );
@@ -103,14 +106,14 @@ export default function MapScreen() {
         {Object.values(STATUS).map((s) => (
           <View key={s.key} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: s.color }]} />
-            <Text style={styles.legendText}>{s.label}</Text>
+            <T style={styles.legendText}>{s.label}</T>
           </View>
         ))}
       </View>
 
       {/* زرار موقعي */}
       <Pressable style={({ pressed }) => [styles.myLocBtn, pressed && { opacity: 0.85 }]} onPress={goMyLocation}>
-        <Text style={{ fontSize: 20 }}>🎯</Text>
+        <T style={{ fontSize: 20 }}>🎯</T>
       </Pressable>
 
       {/* كارت البلاغ المحدد */}
@@ -122,8 +125,8 @@ export default function MapScreen() {
                 <View style={styles.sheetHead}>
                   <CategoryBadge category={selected.category} size={46} />
                   <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                    <Text style={styles.sheetTitle}>{CATEGORIES[selected.category]?.label}</Text>
-                    <Text style={styles.sheetCode}>{selected.trackingCode}</Text>
+                    <T style={styles.sheetTitle}>{CATEGORIES[selected.category]?.label}</T>
+                    <T style={styles.sheetCode}>{selected.trackingCode}</T>
                   </View>
                 </View>
                 <View style={styles.sheetChips}>
@@ -134,9 +137,9 @@ export default function MapScreen() {
                   <Image source={{ uri: selected.imageUrl }} style={styles.sheetImg} />
                 ) : null}
                 {selected.description ? (
-                  <Text style={styles.sheetDesc}>{selected.description}</Text>
+                  <T style={styles.sheetDesc}>{selected.description}</T>
                 ) : null}
-                <Text style={styles.sheetDate}>{formatDate(selected.createdAtMillis)}</Text>
+                <T style={styles.sheetDate}>{formatDate(selected.createdAtMillis)}</T>
                 <PrimaryButton
                   title="تفاصيل ومتابعة الحالة"
                   onPress={() => {
@@ -161,7 +164,7 @@ function FilterChip({ label, active, onPress }) {
       onPress={onPress}
       style={[styles.filterChip, active && { backgroundColor: colors.navy, borderColor: colors.navy }]}
     >
-      <Text style={[styles.filterText, active && { color: '#fff' }]}>{label}</Text>
+      <T style={[styles.filterText, active && { color: '#fff' }]}>{label}</T>
     </Pressable>
   );
 }

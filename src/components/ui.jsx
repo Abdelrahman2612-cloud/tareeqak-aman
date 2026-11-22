@@ -1,27 +1,28 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, radius, shadow, STATUS, CATEGORIES, SEVERITY } from '../theme';
+import { T } from './T';
 
 export function StatusChip({ status }) {
   const s = STATUS[status] || STATUS.new;
   return (
     <View style={[styles.chip, { backgroundColor: s.bg }]}>
       <View style={[styles.dot, { backgroundColor: s.color }]} />
-      <Text style={[styles.chipText, { color: s.color }]}>{s.label}</Text>
+      <T style={[styles.chipText, { color: s.color }]}>{s.label}</T>
     </View>
   );
 }
 
 export function CategoryBadge({ category, size = 40 }) {
-  const c = CATEGORIES[category] || { icon: '❓', label: category };
+  const c = CATEGORIES[category] || { icon: '❓', label: category, color: colors.textSoft };
   return (
     <View
       style={[
         styles.catBadge,
-        { width: size, height: size, borderRadius: size * 0.32 },
+        { width: size, height: size, borderRadius: size * 0.32, backgroundColor: (c.color || colors.teal) + '1F' },
       ]}
     >
-      <Text style={{ fontSize: size * 0.48 }}>{c.icon}</Text>
+      <T style={{ fontSize: size * 0.48 }}>{c.icon}</T>
     </View>
   );
 }
@@ -31,12 +32,12 @@ export function SeverityChip({ severity }) {
   if (!s) return null;
   return (
     <View style={[styles.chip, { backgroundColor: s.color + '1A' }]}>
-      <Text style={[styles.chipText, { color: s.color }]}>خطورة {s.label}</Text>
+      <T style={[styles.chipText, { color: s.color }]}>خطورة {s.label}</T>
     </View>
   );
 }
 
-export function PrimaryButton({ title, onPress, disabled, loading, style, color = colors.teal }) {
+export function PrimaryButton({ title, onPress, disabled, loading, style, color = colors.teal, icon }) {
   return (
     <Pressable
       onPress={onPress}
@@ -45,20 +46,23 @@ export function PrimaryButton({ title, onPress, disabled, loading, style, color 
         styles.primaryBtn,
         { backgroundColor: color },
         (disabled || loading) && { opacity: 0.55 },
-        pressed && { opacity: 0.85 },
+        pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
         style,
       ]}
     >
       {loading ? (
         <ActivityIndicator color="#fff" />
       ) : (
-        <Text style={styles.primaryBtnText}>{title}</Text>
+        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
+          {icon ? <T style={{ fontSize: 17 }}>{icon}</T> : null}
+          <T style={styles.primaryBtnText}>{title}</T>
+        </View>
       )}
     </Pressable>
   );
 }
 
-export function GhostButton({ title, onPress, disabled, style }) {
+export function GhostButton({ title, onPress, disabled, style, icon }) {
   return (
     <Pressable
       onPress={onPress}
@@ -70,7 +74,10 @@ export function GhostButton({ title, onPress, disabled, style }) {
         style,
       ]}
     >
-      <Text style={styles.ghostBtnText}>{title}</Text>
+      <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
+        {icon ? <T style={{ fontSize: 16 }}>{icon}</T> : null}
+        <T style={styles.ghostBtnText}>{title}</T>
+      </View>
     </Pressable>
   );
 }
@@ -82,9 +89,9 @@ export function Card({ children, style }) {
 export function EmptyState({ icon, title, subtitle }) {
   return (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>{icon}</Text>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.emptySub}>{subtitle}</Text> : null}
+      <T style={styles.emptyIcon}>{icon}</T>
+      <T style={styles.emptyTitle}>{title}</T>
+      {subtitle ? <T style={styles.emptySub}>{subtitle}</T> : null}
     </View>
   );
 }
@@ -93,13 +100,13 @@ export function EmptyState({ icon, title, subtitle }) {
 export function FirebaseNotConfigured() {
   return (
     <View style={styles.fbWrap}>
-      <Text style={styles.fbIcon}>⚙️</Text>
-      <Text style={styles.fbTitle}>خطوة واحدة فاضلة</Text>
-      <Text style={styles.fbText}>
+      <T style={styles.fbIcon}>⚙️</T>
+      <T style={styles.fbTitle}>خطوة واحدة فاضلة</T>
+      <T style={styles.fbText}>
         التطبيق جاهز، بس محتاج تربطه بقاعدة بيانات Firebase المجانية.{'\n'}
         افتح ملف README.md واتبع قسم «إعداد Firebase» (٥ دقايق بالظبط)،
         وبعدها ارجع هنا وكل حاجة هتشتغل.
-      </Text>
+      </T>
     </View>
   );
 }
@@ -115,9 +122,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  chipText: { fontSize: 12, fontWeight: '700', writingDirection: 'rtl' },
+  chipText: { fontSize: 12, fontWeight: '700' },
   catBadge: {
-    backgroundColor: colors.tealPale,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -128,7 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadow.card,
   },
-  primaryBtnText: { color: '#fff', fontSize: 17, fontWeight: '800', writingDirection: 'rtl' },
+  primaryBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
   ghostBtn: {
     borderRadius: radius.md,
     paddingVertical: 14,
@@ -138,10 +144,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.white,
   },
-  ghostBtnText: { color: colors.text, fontSize: 15, fontWeight: '700', writingDirection: 'rtl' },
+  ghostBtnText: { color: colors.text, fontSize: 15, fontWeight: '700' },
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -149,10 +155,10 @@ const styles = StyleSheet.create({
   },
   empty: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 24 },
   emptyIcon: { fontSize: 44, marginBottom: 10 },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: colors.text, textAlign: 'center', writingDirection: 'rtl' },
-  emptySub: { fontSize: 14, color: colors.textSoft, textAlign: 'center', marginTop: 6, writingDirection: 'rtl' },
+  emptyTitle: { fontSize: 17, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  emptySub: { fontSize: 14, color: colors.textSoft, textAlign: 'center', marginTop: 6, lineHeight: 22 },
   fbWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: colors.bg },
   fbIcon: { fontSize: 46, marginBottom: 12 },
-  fbTitle: { fontSize: 19, fontWeight: '800', color: colors.text, marginBottom: 10, writingDirection: 'rtl' },
-  fbText: { fontSize: 14.5, color: colors.textSoft, textAlign: 'center', lineHeight: 24, writingDirection: 'rtl' },
+  fbTitle: { fontSize: 19, fontWeight: '800', color: colors.text, marginBottom: 10 },
+  fbText: { fontSize: 14.5, color: colors.textSoft, textAlign: 'center', lineHeight: 24 },
 });

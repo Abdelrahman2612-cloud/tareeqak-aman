@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   ScrollView,
@@ -10,10 +9,11 @@ import {
   Image,
   RefreshControl,
 } from 'react-native';
-import { colors, radius, STATUS, STATUS_ORDER, CATEGORIES, CATEGORY_KEYS, SEVERITY, SEVERITY_ORDER, formatDate } from '../theme';
+import { colors, radius, shadow, STATUS, STATUS_ORDER, CATEGORIES, CATEGORY_KEYS, SEVERITY_ORDER, formatDate, FONTS } from '../theme';
 import { listenToReports, updateReportStatus, deleteReport } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
 import { ADMIN_PIN } from '../config/admin';
+import { T } from '../components/T';
 import { StatusChip, CategoryBadge, SeverityChip, Card, EmptyState, FirebaseNotConfigured } from '../components/ui';
 
 export default function AdminScreen() {
@@ -61,9 +61,11 @@ export default function AdminScreen() {
   if (!authed) {
     return (
       <View style={styles.pinWrap}>
-        <Text style={styles.pinIcon}>🔐</Text>
-        <Text style={styles.pinTitle}>منطقة المشرفين</Text>
-        <Text style={styles.pinSub}>ادخل الرقم السري عشان تكمل</Text>
+        <View style={styles.pinIconWrap}>
+          <T style={styles.pinIcon}>🔐</T>
+        </View>
+        <T style={styles.pinTitle}>منطقة المشرفين</T>
+        <T style={styles.pinSub}>ادخل الرقم السري عشان تكمل</T>
         <TextInput
           style={[styles.pinInput, pinError && { borderColor: colors.red }]}
           value={pin}
@@ -79,11 +81,11 @@ export default function AdminScreen() {
           textAlign="center"
           onSubmitEditing={tryPin}
         />
-        {pinError && <Text style={styles.pinError}>الرقم غلط، حاول تاني</Text>}
+        {pinError && <T style={styles.pinError}>الرقم غلط، حاول تاني</T>}
         <Pressable style={({ pressed }) => [styles.pinBtn, pressed && { opacity: 0.85 }]} onPress={tryPin}>
-          <Text style={styles.pinBtnText}>دخول</Text>
+          <T style={styles.pinBtnText}>دخول</T>
         </Pressable>
-        <Text style={styles.pinHint}>الرقم الافتراضي 1234 — غيّره من ملف src/config/admin.js</Text>
+        <T style={styles.pinHint}>الرقم بيتغيّر من ملف src/config/admin.js</T>
       </View>
     );
   }
@@ -164,21 +166,24 @@ export default function AdminScreen() {
 
       {/* بلاغات مفتوحة حسب الفئة */}
       <Card style={{ marginTop: 12 }}>
-        <Text style={styles.cardTitle}>بلاغات مفتوحة حسب النوع</Text>
+        <T style={styles.cardTitle}>بلاغات مفتوحة حسب النوع</T>
         <View style={styles.catRow}>
           {byCategory.map((c) => (
             <View key={c.key} style={styles.catItem}>
-              <Text style={styles.catIcon}>{CATEGORIES[c.key].icon}</Text>
-              <Text style={styles.catCount}>{c.count}</Text>
+              <View style={[styles.catIconWrap, { backgroundColor: CATEGORIES[c.key].color + '1F' }]}>
+                <T style={styles.catIcon}>{CATEGORIES[c.key].icon}</T>
+              </View>
+              <T style={styles.catCount}>{c.count}</T>
+              <T style={styles.catLabel}>{CATEGORIES[c.key].label}</T>
             </View>
           ))}
         </View>
       </Card>
 
       {/* قائمة البلاغات */}
-      <Text style={[styles.cardTitle, { marginTop: 20, marginBottom: 10 }]}>
+      <T style={[styles.cardTitle, { marginTop: 20, marginBottom: 10 }]}>
         البلاغات (مرتبة بالأولوية)
-      </Text>
+      </T>
       {loading ? (
         <Card><EmptyState icon="⏳" title="بنحمّل…" /></Card>
       ) : sorted.length === 0 ? (
@@ -191,10 +196,13 @@ export default function AdminScreen() {
           return (
             <Card key={r.id} style={{ marginBottom: 10, opacity: busyId === r.id ? 0.6 : 1 }}>
               <View style={styles.itemHead}>
-                <CategoryBadge category={r.category} size={42} />
+                <CategoryBadge category={r.category} size={44} />
                 <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                  <Text style={styles.itemTitle}>{CATEGORIES[r.category]?.label}</Text>
-                  <Text style={styles.itemCode}>{r.trackingCode} · {formatDate(r.createdAtMillis)}</Text>
+                  <T style={styles.itemTitle}>{CATEGORIES[r.category]?.label}</T>
+                  <T style={styles.itemCode}>
+                    {r.trackingCode} · {formatDate(r.createdAtMillis)}
+                    {r.userName ? ` · ${r.userName}` : ''}
+                  </T>
                 </View>
               </View>
               <View style={styles.itemChips}>
@@ -202,7 +210,7 @@ export default function AdminScreen() {
                 <SeverityChip severity={r.severity} />
               </View>
               {r.imageUrl ? <Image source={{ uri: r.imageUrl }} style={styles.itemImg} /> : null}
-              {r.description ? <Text style={styles.itemDesc} numberOfLines={3}>{r.description}</Text> : null}
+              {r.description ? <T style={styles.itemDesc} numberOfLines={3}>{r.description}</T> : null}
               <View style={styles.actionsRow}>
                 {nextStatus && (
                   <Pressable
@@ -210,7 +218,7 @@ export default function AdminScreen() {
                     onPress={() => changeStatus(r, nextStatus)}
                     disabled={busyId === r.id}
                   >
-                    <Text style={styles.actionBtnText}>تحويل إلى «{STATUS[nextStatus].label}»</Text>
+                    <T style={styles.actionBtnText}>تحويل إلى «{STATUS[nextStatus].label}»</T>
                   </Pressable>
                 )}
                 {prevStatus && (
@@ -219,7 +227,7 @@ export default function AdminScreen() {
                     onPress={() => changeStatus(r, prevStatus)}
                     disabled={busyId === r.id}
                   >
-                    <Text style={[styles.actionBtnText, { color: colors.textSoft }]}>رجوع لـ«{STATUS[prevStatus].label}»</Text>
+                    <T style={[styles.actionBtnText, { color: colors.textSoft }]}>رجوع لـ«{STATUS[prevStatus].label}»</T>
                   </Pressable>
                 )}
                 <Pressable
@@ -227,7 +235,7 @@ export default function AdminScreen() {
                   onPress={() => confirmDelete(r)}
                   disabled={busyId === r.id}
                 >
-                  <Text style={[styles.actionBtnText, { color: colors.red }]}>🗑 حذف</Text>
+                  <T style={[styles.actionBtnText, { color: colors.red }]}>🗑 حذف</T>
                 </Pressable>
               </View>
             </Card>
@@ -244,39 +252,50 @@ function Stat({ label, value, color, active, onPress }) {
       onPress={onPress}
       style={[styles.statCard, active && { borderColor: color, borderWidth: 2 }]}
     >
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <T style={[styles.statValue, { color }]}>{value}</T>
+      <T style={styles.statLabel}>{label}</T>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   pinWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: colors.bg },
-  pinIcon: { fontSize: 46, marginBottom: 12 },
-  pinTitle: { fontSize: 21, fontWeight: '900', color: colors.text, writingDirection: 'rtl' },
-  pinSub: { fontSize: 14, color: colors.textSoft, marginTop: 6, marginBottom: 20, writingDirection: 'rtl' },
+  pinIconWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.navy,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    ...shadow.raised,
+  },
+  pinIcon: { fontSize: 38 },
+  pinTitle: { fontSize: 22, fontFamily: FONTS.black, color: colors.text },
+  pinSub: { fontSize: 14, color: colors.textSoft, marginTop: 6, marginBottom: 22 },
   pinInput: {
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radius.md,
-    width: 180,
+    width: 190,
     paddingVertical: 12,
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: FONTS.extraBold,
     color: colors.text,
     letterSpacing: 6,
   },
-  pinError: { color: colors.red, fontSize: 13, marginTop: 8, writingDirection: 'rtl' },
+  pinError: { color: colors.red, fontSize: 13, marginTop: 8, fontFamily: FONTS.semiBold },
   pinBtn: {
     backgroundColor: colors.teal,
     borderRadius: radius.md,
     paddingVertical: 13,
-    paddingHorizontal: 60,
+    paddingHorizontal: 64,
     marginTop: 16,
+    ...shadow.card,
   },
-  pinBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  pinHint: { fontSize: 11.5, color: colors.textSoft, marginTop: 18, writingDirection: 'rtl', textAlign: 'center' },
+  pinBtnText: { color: '#fff', fontSize: 16, fontFamily: FONTS.extraBold },
+  pinHint: { fontSize: 11.5, color: colors.textSoft, marginTop: 20, textAlign: 'center' },
   statsRow: { flexDirection: 'row-reverse', gap: 10 },
   statCard: {
     flex: 1,
@@ -286,27 +305,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadow.card,
   },
-  statValue: { fontSize: 21, fontWeight: '900' },
-  statLabel: { fontSize: 11.5, color: colors.textSoft, marginTop: 2, writingDirection: 'rtl' },
-  cardTitle: { fontSize: 16, fontWeight: '900', color: colors.text, textAlign: 'right', writingDirection: 'rtl' },
-  catRow: { flexDirection: 'row-reverse', justifyContent: 'space-around', marginTop: 12 },
-  catItem: { alignItems: 'center', gap: 4 },
-  catIcon: { fontSize: 24 },
-  catCount: { fontSize: 16, fontWeight: '900', color: colors.navy },
+  statValue: { fontSize: 21, fontFamily: FONTS.black },
+  statLabel: { fontSize: 11.5, color: colors.textSoft, marginTop: 3, fontFamily: FONTS.semiBold },
+  cardTitle: { fontSize: 16.5, fontFamily: FONTS.black, color: colors.text, textAlign: 'right' },
+  catRow: { flexDirection: 'row-reverse', justifyContent: 'space-around', marginTop: 14 },
+  catItem: { alignItems: 'center', gap: 5, flex: 1 },
+  catIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  catIcon: { fontSize: 22 },
+  catCount: { fontSize: 17, fontFamily: FONTS.black, color: colors.navy },
+  catLabel: { fontSize: 9.5, color: colors.textSoft, textAlign: 'center', fontFamily: FONTS.semiBold },
   itemHead: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  itemTitle: { fontSize: 16, fontWeight: '800', color: colors.text, writingDirection: 'rtl' },
+  itemTitle: { fontSize: 16, fontFamily: FONTS.extraBold, color: colors.text },
   itemCode: { fontSize: 12, color: colors.textSoft, marginTop: 2 },
   itemChips: { flexDirection: 'row-reverse', gap: 8, marginTop: 10 },
-  itemImg: { width: '100%', height: 150, borderRadius: radius.sm, marginTop: 10 },
-  itemDesc: { fontSize: 13.5, color: colors.text, marginTop: 10, textAlign: 'right', writingDirection: 'rtl', lineHeight: 20 },
+  itemImg: { width: '100%', height: 160, borderRadius: radius.sm, marginTop: 10 },
+  itemDesc: { fontSize: 14, color: colors.text, marginTop: 10, textAlign: 'right', lineHeight: 21 },
   actionsRow: { flexDirection: 'row-reverse', gap: 8, marginTop: 12, flexWrap: 'wrap' },
   actionBtn: {
     borderRadius: radius.sm,
     paddingVertical: 9,
     paddingHorizontal: 14,
   },
-  actionBtnGhost: { backgroundColor: '#EEF2F6' },
-  actionBtnDelete: { backgroundColor: '#FEE2E2' },
-  actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '800', writingDirection: 'rtl' },
+  actionBtnGhost: { backgroundColor: '#EEF2F7' },
+  actionBtnDelete: { backgroundColor: '#FDECEC' },
+  actionBtnText: { color: '#fff', fontSize: 12.5, fontFamily: FONTS.bold },
 });

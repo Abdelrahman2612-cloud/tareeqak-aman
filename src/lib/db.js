@@ -1,4 +1,3 @@
-import { initializeApp, getApps } from 'firebase/app';
 import {
   getFirestore,
   collection,
@@ -14,16 +13,17 @@ import {
   onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
-import { firebaseConfig, isFirebaseConfigured } from '../config/firebase';
+import { getFirebaseApp } from './firebaseApp';
+import { getAuthInstance } from './auth';
 import { generateTrackingCode } from './trackingCode';
 import { distanceMeters } from './geo';
 
 let dbInstance = null;
 
 export function getDb() {
-  if (!isFirebaseConfigured()) return null;
+  const app = getFirebaseApp();
+  if (!app) return null;
   if (!dbInstance) {
-    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     dbInstance = getFirestore(app);
   }
   return dbInstance;
@@ -41,17 +41,20 @@ export function normalizeReport(id, data) {
     lng: data.location?.lng ?? null,
     status: data.status || 'new',
     statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],
+    userId: data.userId || null,
+    userName: data.userName || null,
     createdAtMillis:
       data.createdAtMillis || (data.createdAt?.toMillis ? data.createdAt.toMillis() : null),
   };
 }
 
-// إضافة بلاغ جديد — يرجع الرقم المرجعي
+// إضافة بلاغ جديد — يرجع الرقم المرجعي. البلاغ بيتربط بالمستخدم لو مسجل دخوله
 export async function submitReport({ category, severity, description, imageUrl, lat, lng }) {
   const db = getDb();
   if (!db) throw new Error('firebase-not-configured');
   const trackingCode = generateTrackingCode();
   const now = Date.now();
+  const user = getAuthInstance()?.currentUser || null;
   const docRef = await addDoc(collection(db, 'reports'), {
     trackingCode,
     category,
@@ -61,6 +64,8 @@ export async function submitReport({ category, severity, description, imageUrl, 
     location: { lat, lng },
     status: 'new',
     statusHistory: [{ status: 'new', at: now }],
+    userId: user?.uid || null,
+    userName: user?.displayName || user?.email || 'ضيف',
     createdAt: serverTimestamp(),
     createdAtMillis: now,
   });

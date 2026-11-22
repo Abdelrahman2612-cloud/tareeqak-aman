@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
+
   StyleSheet,
   ScrollView,
   Pressable,
@@ -15,7 +15,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { colors, radius, CATEGORIES, CATEGORY_KEYS, SEVERITY, STATUS } from '../theme';
+import { T } from '../components/T';
+import { colors, radius, CATEGORIES, CATEGORY_KEYS, SEVERITY, STATUS, FONTS } from '../theme';
 import { submitReport, findNearbyDuplicate } from '../lib/db';
 import { uploadImageToCloudinary, isCloudinaryConfigured } from '../lib/cloudinary';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -173,12 +174,12 @@ export default function ReportScreen() {
     return (
       <View style={styles.successWrap}>
         <View style={styles.successIconWrap}>
-          <Text style={styles.successIcon}>✅</Text>
+          <T style={styles.successIcon}>✅</T>
         </View>
-        <Text style={styles.successTitle}>بلاغك اتسجل بنجاح!</Text>
-        <Text style={styles.successSub}>احتفظ بالرقم المرجعي ده عشان تتابع حالة البلاغ:</Text>
+        <T style={styles.successTitle}>بلاغك اتسجل بنجاح!</T>
+        <T style={styles.successSub}>احتفظ بالرقم المرجعي ده عشان تتابع حالة البلاغ:</T>
         <View style={styles.codeBox}>
-          <Text style={styles.codeText}>{result.trackingCode}</Text>
+          <T style={styles.codeText}>{result.trackingCode}</T>
         </View>
         <PrimaryButton
           title="تابع البلاغ دلوقتي"
@@ -215,13 +216,13 @@ export default function ReportScreen() {
                 i === step && styles.stepDotActive,
               ]}
             >
-              <Text style={[styles.stepNum, (i <= step) && { color: '#fff' }]}>
+              <T style={[styles.stepNum, (i <= step) && { color: '#fff' }]}>
                 {i < step ? '✓' : i + 1}
-              </Text>
+              </T>
             </View>
-            <Text style={[styles.stepLabel, i === step && { color: colors.navy, fontWeight: '800' }]}>
+            <T style={[styles.stepLabel, i === step && { color: colors.navy, fontWeight: '800' }]}>
               {label}
-            </Text>
+            </T>
           </View>
         ))}
       </View>
@@ -230,8 +231,8 @@ export default function ReportScreen() {
         {/* الخطوة ١: الصورة */}
         {step === 0 && (
           <View>
-            <Text style={styles.h}>صوّر المشكلة 📸</Text>
-            <Text style={styles.p}>صورة واضحة للمشكلة بتخلي البلاغ أقوى وبتساعد فرق الصيانة.</Text>
+            <T style={styles.h}>صوّر المشكلة 📸</T>
+            <T style={styles.p}>صورة واضحة للمشكلة بتخلي البلاغ أقوى وبتساعد فرق الصيانة.</T>
             {photo ? (
               <View>
                 <Image source={{ uri: photo.uri }} style={styles.photoPreview} />
@@ -240,17 +241,17 @@ export default function ReportScreen() {
             ) : (
               <View style={styles.photoBtns}>
                 <Pressable style={({ pressed }) => [styles.photoBtn, pressed && { opacity: 0.85 }]} onPress={pickFromCamera}>
-                  <Text style={styles.photoBtnIcon}>📷</Text>
-                  <Text style={styles.photoBtnText}>التقط صورة</Text>
+                  <T style={styles.photoBtnIcon}>📷</T>
+                  <T style={styles.photoBtnText}>التقط صورة</T>
                 </Pressable>
                 <Pressable style={({ pressed }) => [styles.photoBtn, pressed && { opacity: 0.85 }]} onPress={pickFromGallery}>
-                  <Text style={styles.photoBtnIcon}>🖼️</Text>
-                  <Text style={styles.photoBtnText}>من المعرض</Text>
+                  <T style={styles.photoBtnIcon}>🖼️</T>
+                  <T style={styles.photoBtnText}>من المعرض</T>
                 </Pressable>
               </View>
             )}
             <Pressable onPress={() => setStep(1)}>
-              <Text style={styles.skip}>تخطي من غير صورة ←</Text>
+              <T style={styles.skip}>تخطي من غير صورة ←</T>
             </Pressable>
           </View>
         )}
@@ -258,7 +259,7 @@ export default function ReportScreen() {
         {/* الخطوة ٢: الفئة والتفاصيل */}
         {step === 1 && (
           <View>
-            <Text style={styles.h}>نوع المشكلة إيه؟</Text>
+            <T style={styles.h}>نوع المشكلة إيه؟</T>
             <View style={styles.catGrid}>
               {CATEGORY_KEYS.map((key) => {
                 const c = CATEGORIES[key];
@@ -269,14 +270,14 @@ export default function ReportScreen() {
                     onPress={() => setCategory(key)}
                     style={[styles.catCard, active && styles.catCardActive]}
                   >
-                    <Text style={styles.catIcon}>{c.icon}</Text>
-                    <Text style={[styles.catLabel, active && { color: colors.teal }]}>{c.label}</Text>
+                    <T style={styles.catIcon}>{c.icon}</T>
+                    <T style={[styles.catLabel, active && { color: colors.teal }]}>{c.label}</T>
                   </Pressable>
                 );
               })}
             </View>
 
-            <Text style={[styles.h, { marginTop: 20 }]}>درجة الخطورة</Text>
+            <T style={[styles.h, { marginTop: 20 }]}>درجة الخطورة</T>
             <View style={styles.sevRow}>
               {Object.values(SEVERITY).map((s) => {
                 const active = severity === s.key;
@@ -289,15 +290,15 @@ export default function ReportScreen() {
                       active && { backgroundColor: s.color + '22', borderColor: s.color },
                     ]}
                   >
-                    <Text style={[styles.sevText, active && { color: s.color, fontWeight: '800' }]}>
+                    <T style={[styles.sevText, active && { color: s.color, fontWeight: '800' }]}>
                       {s.label}
-                    </Text>
+                    </T>
                   </Pressable>
                 );
               })}
             </View>
 
-            <Text style={[styles.h, { marginTop: 20 }]}>وصف مختصر (اختياري)</Text>
+            <T style={[styles.h, { marginTop: 20 }]}>وصف مختصر (اختياري)</T>
             <TextInput
               style={styles.textArea}
               placeholder="مثال: حفرة كبيرة قدام مدخل العمارة بتعرقل العربيات…"
@@ -315,10 +316,10 @@ export default function ReportScreen() {
         {/* الخطوة ٣: الموقع */}
         {step === 2 && (
           <View style={{ flex: 1 }}>
-            <Text style={styles.h}>فين المشكلة بالظبط؟ 📍</Text>
-            <Text style={styles.p}>
+            <T style={styles.h}>فين المشكلة بالظبط؟ 📍</T>
+            <T style={styles.p}>
               دوس على أي نقطة على الخريطة لتحديد المكان، أو استخدم موقعك الحالي.
-            </Text>
+            </T>
             <PrimaryButton
               title={locLoading ? 'بنحدد موقعك…' : 'استخدم موقعي الحالي 🎯'}
               onPress={() => useMyLocation(false)}
@@ -336,9 +337,9 @@ export default function ReportScreen() {
               />
             </View>
             {position && (
-              <Text style={styles.coords}>
+              <T style={styles.coords}>
                 ✓ الموقع اتحدد: {position.lat.toFixed(5)} , {position.lng.toFixed(5)}
-              </Text>
+              </T>
             )}
           </View>
         )}
@@ -346,48 +347,48 @@ export default function ReportScreen() {
         {/* الخطوة ٤: المراجعة */}
         {step === 3 && (
           <View>
-            <Text style={styles.h}>راجع البلاغ قبل الإرسال</Text>
+            <T style={styles.h}>راجع البلاغ قبل الإرسال</T>
             <Card style={{ marginTop: 12 }}>
               {photo?.uri ? <Image source={{ uri: photo.uri }} style={styles.reviewPhoto} /> : null}
               <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>النوع</Text>
+                <T style={styles.reviewLabel}>النوع</T>
                 <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
                   <CategoryBadge category={category} size={34} />
-                  <Text style={styles.reviewValue}>{CATEGORIES[category]?.label}</Text>
+                  <T style={styles.reviewValue}>{CATEGORIES[category]?.label}</T>
                 </View>
               </View>
               <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>الخطورة</Text>
-                <Text style={[styles.reviewValue, { color: SEVERITY[severity]?.color }]}>
+                <T style={styles.reviewLabel}>الخطورة</T>
+                <T style={[styles.reviewValue, { color: SEVERITY[severity]?.color }]}>
                   {SEVERITY[severity]?.label}
-                </Text>
+                </T>
               </View>
               {description.trim() ? (
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>الوصف</Text>
-                  <Text style={[styles.reviewValue, { flex: 1, textAlign: 'left' }]}>{description.trim()}</Text>
+                  <T style={styles.reviewLabel}>الوصف</T>
+                  <T style={[styles.reviewValue, { flex: 1, textAlign: 'left' }]}>{description.trim()}</T>
                 </View>
               ) : null}
               <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>الموقع</Text>
-                <Text style={styles.reviewValue}>
+                <T style={styles.reviewLabel}>الموقع</T>
+                <T style={styles.reviewValue}>
                   {position ? '✓ اتحدد على الخريطة' : '—'}
-                </Text>
+                </T>
               </View>
               <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>الصورة</Text>
-                <Text style={styles.reviewValue}>
+                <T style={styles.reviewLabel}>الصورة</T>
+                <T style={styles.reviewValue}>
                   {photo?.uri
                     ? isCloudinaryConfigured()
                       ? '✓ هتترفع مع البلاغ'
                       : '⚠️ هتتسجل محليًا بس (Cloudinary مش متظبط)'
                     : 'من غير صورة'}
-                </Text>
+                </T>
               </View>
             </Card>
-            <Text style={styles.note}>
+            <T style={styles.note}>
               بعد الإرسال هتاخد رقم مرجعي تتابع بيه حالة البلاغ في أي وقت.
-            </Text>
+            </T>
           </View>
         )}
       </ScrollView>
@@ -412,7 +413,7 @@ export default function ReportScreen() {
       {submitting && submitStage ? (
         <View style={styles.stageBar}>
           <ActivityIndicator color={colors.teal} size="small" />
-          <Text style={styles.stageText}>{submitStage}</Text>
+          <T style={styles.stageText}>{submitStage}</T>
         </View>
       ) : null}
     </KeyboardAvoidingView>
@@ -492,9 +493,9 @@ const styles = StyleSheet.create({
     minHeight: 110,
     padding: 14,
     fontSize: 14.5,
+    fontFamily: FONTS.regular,
     color: colors.text,
     marginTop: 8,
-    writingDirection: 'rtl',
   },
   mapBox: {
     height: 340,
