@@ -2,6 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // معرّف حساب المشرف: من Firebase Console ← Authentication ← Users ← عمود User UID
+    // الصق المعرّف هنا قبل أمر النشر (firebase deploy)
+    function adminUid() {
+      return 'PASTE_ADMIN_UID_HERE';
+    }
+
     // بلاغات الطريق
     match /reports/{reportId} {
       // القراءة للكل: الخريطة والتتبع والإحصائيات شغالة من غير تسجيل دخول
@@ -10,9 +16,9 @@ service cloud.firestore {
       // الإنشاء للكل: أي حد يقدر يبلّغ عن مشكلة، حتى كضيف
       allow create: if true;
 
-      // التعديل والحذف للمشرفين المسجلين بس (Firebase Auth)
-      // كده حد يقدر يغيّر حالة بلاغ أو يمسحه إلا لو مسجل دخوله
-      allow update, delete: if request.auth != null;
+      // التعديل والحذف لحساب المشرف بس
+      // أي حساب تاني — حتى لو مسجل دخوله في التطبيق — قاعدة البيانات نفسها بترفضه
+      allow update, delete: if request.auth != null && request.auth.uid == adminUid();
     }
   }
 }
