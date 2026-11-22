@@ -46,6 +46,19 @@ export default function AdminScreen() {
     return unsub;
   }, [configured, authed, tick]);
 
+  // الأولوية: الخطورة العالية الأول، وبعدين الأحدث
+  // لازم يفضل فوق أي return شرطي (قواعد الـ hooks)
+  const sorted = useMemo(() => {
+    let rows = reports;
+    if (statusFilter !== 'all') rows = rows.filter((r) => r.status === statusFilter);
+    return [...rows].sort((a, b) => {
+      const sa = SEVERITY_ORDER.indexOf(a.severity);
+      const sb = SEVERITY_ORDER.indexOf(b.severity);
+      if (sa !== sb) return sa - sb;
+      return (b.createdAtMillis || 0) - (a.createdAtMillis || 0);
+    });
+  }, [reports, statusFilter]);
+
   if (!configured) return <FirebaseNotConfigured />;
 
   function tryPin() {
@@ -100,18 +113,6 @@ export default function AdminScreen() {
     key: k,
     count: reports.filter((r) => r.category === k && r.status !== 'resolved').length,
   }));
-
-  // الأولوية: الخطورة العالية الأول، وبعدين الأحدث
-  const sorted = useMemo(() => {
-    let rows = reports;
-    if (statusFilter !== 'all') rows = rows.filter((r) => r.status === statusFilter);
-    return [...rows].sort((a, b) => {
-      const sa = SEVERITY_ORDER.indexOf(a.severity);
-      const sb = SEVERITY_ORDER.indexOf(b.severity);
-      if (sa !== sb) return sa - sb;
-      return (b.createdAtMillis || 0) - (a.createdAtMillis || 0);
-    });
-  }, [reports, statusFilter]);
 
   async function changeStatus(report, newStatus) {
     setBusyId(report.id);
