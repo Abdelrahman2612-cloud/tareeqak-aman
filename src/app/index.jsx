@@ -157,7 +157,7 @@ export default function HomeScreen() {
           >
             <View style={styles.ctaTextWrap}>
               <T style={styles.ctaTitle}>أبلغ عن مشكلة في الطريق</T>
-              <T style={styles.ctaSub}>صورة وموقع — والبلاغ بيوصل للمختصين فورًا</T>
+              <T style={styles.ctaSub}>صوّر وحدد الموقع — وبلاغك يتسجّل وتتابعه برقم مرجعي</T>
             </View>
             <View style={styles.ctaIconWrap}>
               <Icon name="megaphone-outline" size={26} color={colors.white} />

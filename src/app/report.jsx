@@ -277,7 +277,7 @@ export default function ReportScreen() {
                       },
                     ]}
                   >
-                    <T style={styles.catIcon}>{c.icon}</T>
+                    <Icon name={c.ion || 'help-circle'} size={30} color={c.color} />
                     <T style={[styles.catLabel, active && { color: c.color }]}>{c.label}</T>
                   </Pressable>
                 );

@@ -85,7 +85,8 @@ export default function MapScreen() {
           {CATEGORY_KEYS.map((k) => (
             <FilterChip
               key={k}
-              label={`${CATEGORIES[k].icon} ${CATEGORIES[k].label}`}
+              label={CATEGORIES[k].label}
+              ion={CATEGORIES[k].ion}
               active={filter === k}
               onPress={() => setFilter(k)}
             />
@@ -164,13 +165,16 @@ export default function MapScreen() {
   );
 }
 
-function FilterChip({ label, active, onPress }) {
+function FilterChip({ label, ion, active, onPress }) {
   return (
     <Pressable
       onPress={onPress}
       style={[styles.filterChip, active && { backgroundColor: colors.navy, borderColor: colors.navy }]}
     >
-      <T style={[styles.filterText, active && { color: '#fff' }]}>{label}</T>
+      <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6 }}>
+        {ion ? <Icon name={ion} size={14} color={active ? '#fff' : colors.textSoft} /> : null}
+        <T style={[styles.filterText, active && { color: '#fff' }]}>{label}</T>
+      </View>
     </Pressable>
   );
 }

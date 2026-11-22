@@ -259,7 +259,7 @@ export default function AdminScreen() {
           {byCategory.map((c) => (
             <View key={c.key} style={styles.catItem}>
               <View style={[styles.catIconWrap, { backgroundColor: CATEGORIES[c.key].color + '1F' }]}>
-                <T style={styles.catIcon}>{CATEGORIES[c.key].icon}</T>
+                <Icon name={CATEGORIES[c.key].ion || 'help-circle'} size={20} color={CATEGORIES[c.key].color} />
               </View>
               <T style={styles.catCount}>{c.count}</T>
               <T style={styles.catLabel}>{CATEGORIES[c.key].label}</T>
