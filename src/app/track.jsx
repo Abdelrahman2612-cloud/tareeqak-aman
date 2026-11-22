@@ -33,6 +33,7 @@ export default function TrackScreen() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [lookupFailed, setLookupFailed] = useState(false);
 
   useEffect(() => {
     if (configured && params.code) {
@@ -49,13 +50,15 @@ export default function TrackScreen() {
     if (!c) return;
     setLoading(true);
     setNotFound(false);
+    setLookupFailed(false);
     setReport(null);
     try {
       const r = await findReportByCode(c);
       if (r) setReport(r);
       else setNotFound(true);
     } catch (e) {
-      setNotFound(true);
+      // فشل البحث نفسه (نت/صلاحيات) ≠ الرقم مش موجود — الرسالة لازم تفرّق
+      setLookupFailed(true);
     } finally {
       setLoading(false);
     }
@@ -80,7 +83,23 @@ export default function TrackScreen() {
         />
       </View>
 
-      {notFound && (
+      {lookupFailed && (
+        <Card style={{ marginTop: 16 }}>
+          <EmptyState
+            icon={<IconTile name="cloud-offline" size={56} iconSize={26} color={colors.red} bg={colors.redPale} />}
+            title="مقدرناش نكمل البحث"
+            subtitle="غالبًا مشكلة اتصال — اتأكد من الإنترنت وجرب تاني. رقمك محفوظ زي ما هو."
+          />
+          <PrimaryButton
+            title="إعادة المحاولة"
+            onPress={() => search()}
+            loading={loading}
+            style={{ marginTop: 14 }}
+          />
+        </Card>
+      )}
+
+      {notFound && !lookupFailed && (
         <Card style={{ marginTop: 16 }}>
           <EmptyState
             icon={<IconTile name="search" size={56} iconSize={26} color={colors.amber} bg={colors.amberPale} />}
