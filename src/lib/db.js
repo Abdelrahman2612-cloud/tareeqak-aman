@@ -65,7 +65,8 @@ export async function submitReport({ category, severity, description, imageUrl, 
     status: 'new',
     statusHistory: [{ status: 'new', at: now }],
     userId: user?.uid || null,
-    userName: user?.displayName || user?.email || 'ضيف',
+    // من غير رجوع للإيميل: اسم المبلّغ ماينشرش إيميله في قاعدة بيانات مقروءة للكل
+    userName: user?.displayName || 'ضيف',
     createdAt: serverTimestamp(),
     createdAtMillis: now,
   });
