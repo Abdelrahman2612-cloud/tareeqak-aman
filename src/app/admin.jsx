@@ -105,7 +105,6 @@ export default function AdminScreen() {
         <Pressable style={({ pressed }) => [styles.pinBtn, pressed && { opacity: 0.85 }]} onPress={tryPin}>
           <T style={styles.pinBtnText}>دخول</T>
         </Pressable>
-        <T style={styles.pinHint}>الرقم بيتغيّر من ملف src/config/admin.js</T>
       </View>
     );
   }

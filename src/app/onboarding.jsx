@@ -1,16 +1,10 @@
-import React, { useRef, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  useWindowDimensions,
-  Pressable,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, radius, FONTS } from '../theme';
+import { colors, FONTS } from '../theme';
 import { T } from '../components/T';
 import { PrimaryButton } from '../components/ui';
 import { IconTile } from '../components/Icon';
@@ -51,10 +45,9 @@ async function markOnboardingSeen() {
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const scrollRef = useRef(null);
   const [page, setPage] = useState(0);
   const last = page === SLIDES.length - 1;
+  const slide = SLIDES[page];
 
   async function finish() {
     await markOnboardingSeen();
@@ -66,7 +59,7 @@ export default function OnboardingScreen() {
       finish();
       return;
     }
-    scrollRef.current?.scrollTo({ x: (page + 1) * width, animated: true });
+    setPage(page + 1);
   }
 
   return (
@@ -79,28 +72,21 @@ export default function OnboardingScreen() {
           </Pressable>
         </View>
 
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0 }}
-          contentContainerStyle={{ flexDirection: 'row-reverse' }}
-          onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / width))}
-          scrollEventThrottle={16}
-        >
-          {SLIDES.map((s) => (
-            <View key={s.title} style={[styles.slide, { width }]}>
-              <IconTile name={s.icon} size={96} iconSize={44} color={colors.teal} bg={colors.tealPale} style={{ borderRadius: 30, marginBottom: 24 }} />
-              <T style={styles.title}>{s.title}</T>
-              <T style={styles.text}>{s.text}</T>
-            </View>
-          ))}
-        </ScrollView>
+        {/* State-driven pager: identical on web and native, immune to RTL
+            horizontal-scroll origin differences between platforms. */}
+        <View style={styles.slideArea}>
+          <View key={slide.title} style={styles.slide}>
+            <IconTile name={slide.icon} size={96} iconSize={44} color={colors.teal} bg={colors.tealPale} style={{ borderRadius: 30, marginBottom: 24 }} />
+            <T style={styles.title}>{slide.title}</T>
+            <T style={styles.text}>{slide.text}</T>
+          </View>
+        </View>
 
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
-            <View key={i} style={[styles.dot, i === page && styles.dotActive]} />
+            <Pressable key={i} onPress={() => setPage(i)} hitSlop={8}>
+              <View style={[styles.dot, i === page && styles.dotActive]} />
+            </Pressable>
           ))}
         </View>
 
@@ -120,19 +106,8 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.navy },
   topRow: { alignItems: 'flex-start', paddingHorizontal: 20, paddingVertical: 10 },
   skip: { color: '#9FB3C8', fontSize: 15, fontFamily: FONTS.semiBold },
+  slideArea: { flexGrow: 1, justifyContent: 'center' },
   slide: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
-  iconCircle: {
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    backgroundColor: 'rgba(20,184,166,0.14)',
-    borderWidth: 2,
-    borderColor: 'rgba(20,184,166,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  icon: { fontSize: 62 },
   title: { color: colors.white, fontSize: 24, fontFamily: FONTS.black, textAlign: 'center' },
   text: {
     color: '#B8C7D9',
