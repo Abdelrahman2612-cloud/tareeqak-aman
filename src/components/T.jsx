@@ -10,6 +10,7 @@ export function T({ style, ...props }) {
   return (
     <Text
       {...props}
+      textBreakStrategy="simple"
       style={[{ fontFamily, writingDirection: 'rtl' }, style, { fontWeight: undefined }]}
     />
   );

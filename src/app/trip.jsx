@@ -6,6 +6,7 @@ import { View, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import * as Speech from 'expo-speech';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import LeafletMap from '../components/LeafletMap';
 import { T } from '../components/T';
 import { colors, radius, CATEGORIES, FONTS } from '../theme';
@@ -41,6 +42,10 @@ export default function TripScreen() {
   const [simulating, setSimulating] = useState(false);
   const [arVoice, setArVoice] = useState(true);
   const [routeError, setRouteError] = useState('');
+  // وضع المركبة: سيارة أو دراجة نارية. خدمة المسارات المجانية (OSRM demo) بتحسب مسارات
+  // قيادة سيارات بس، فالوضعين بيستخدموا نفس المسار — وبنوضّح ده صراحة للمستخدم.
+  const [mode, setMode] = useState('car');
+  const [routeSeconds, setRouteSeconds] = useState(0);
 
   const alertStates = useRef({}); // لكل بلاغ: { far, near } — بيتصفر مع كل رحلة جديدة
   const arrivedRef = useRef(false); // تنبيه الوصول مرة واحدة بس
@@ -221,6 +226,7 @@ export default function TripScreen() {
       const route = await fetchDrivingRoute(start, destination);
       setRouteCoords(route.coords);
       setRouteMeters(route.distanceMeters);
+      setRouteSeconds(route.durationSeconds || 0);
       alertStates.current = {};
       arrivedRef.current = false;
       simAlong.current = myPos ? routePosition(route.coords, myPos).alongMeters : 0;
@@ -256,6 +262,17 @@ export default function TripScreen() {
   const remainingMeters =
     myRoutePos && routeCoords ? Math.max(0, routeLength(routeCoords) - myRoutePos.alongMeters) : null;
   const nextHazardMeters = nextHazard && myRoutePos ? nextHazard.alongMeters - myRoutePos.alongMeters : null;
+  // وقت تقريبي متبقٍي: بنوزّع مدة المسار الكلية (من OSRM) على نسبة المسافة الباقية
+  const etaMinutes =
+    routeSeconds > 0
+      ? Math.max(
+          1,
+          Math.round(
+            (remainingMeters != null && routeMeters > 0 ? remainingMeters / routeMeters : 1) *
+              (routeSeconds / 60)
+          )
+        )
+      : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -292,8 +309,25 @@ export default function TripScreen() {
           </View>
         )}
 
-        {/* لوحة التحكم السفلية */}
-        <View style={styles.panel}>
+        {/* لوحة التحكم السفلية — شكل قريب من تطبيقات الملاحة المألوفة، بروح البراند */}
+        <View style={styles.sheet}>
+          <View style={styles.handle} />
+          {phase !== 'active' && (
+            <View style={styles.modeRow}>
+              <ModeButton active={mode === 'car'} icon="car" label="سيارة" onPress={() => setMode('car')} />
+              <ModeButton
+                active={mode === 'motorcycle'}
+                icon="motorbike"
+                label="دراجة نارية"
+                onPress={() => setMode('motorcycle')}
+              />
+            </View>
+          )}
+          {mode === 'motorcycle' && (
+            <T style={styles.modeNote}>
+              المسار بيتحسب على شبكة طرق السيارات — خدمة المسارات المجانية الحالية مش بتوفّر توجيه مخصوص للدراجات النارية.
+            </T>
+          )}
           {phase === 'pick' && (
             <>
               <T style={styles.panelTitle}>حدد وجهتك بضغطة على الخريطة</T>
@@ -327,16 +361,34 @@ export default function TripScreen() {
                   التنبيه الصوتي غير متاح على جهازك (مفيش صوت عربي متسطب) — التنبيهات المرئية شغالة
                 </T>
               )}
-              <View style={styles.row}>
-                <T style={styles.stat}>
-                  المتبقي: {remainingMeters != null ? (remainingMeters / 1000).toFixed(1) : '…'} كم
-                </T>
-                <T style={styles.stat}>
-                  {nextHazardMeters != null
-                    ? `أقرب بلاغ بعد ${Math.max(0, Math.round(nextHazardMeters))} م`
-                    : 'مفيش بلاغات قدّامك'}
-                </T>
+              {/* شريط حالة الرحلة — ستايل شريط الملاحة الداكن المألوف */}
+              <View style={styles.navBar}>
+                <View style={styles.navStat}>
+                  <MaterialCommunityIcons
+                    name={mode === 'motorcycle' ? 'motorbike' : 'car'}
+                    size={20}
+                    color={colors.tealLight}
+                  />
+                  <T style={styles.navStatLabel}>{mode === 'motorcycle' ? 'دراجة نارية' : 'سيارة'}</T>
+                </View>
+                <View style={styles.navDivider} />
+                <View style={styles.navStat}>
+                  <T style={styles.navStatValue}>
+                    {remainingMeters != null ? (remainingMeters / 1000).toFixed(1) : '…'}
+                  </T>
+                  <T style={styles.navStatLabel}>كم متبقية</T>
+                </View>
+                <View style={styles.navDivider} />
+                <View style={styles.navStat}>
+                  <T style={styles.navStatValue}>{etaMinutes != null ? `~${etaMinutes}` : '…'}</T>
+                  <T style={styles.navStatLabel}>دقيقة تقريبًا</T>
+                </View>
               </View>
+              <T style={styles.hazardLine}>
+                {nextHazardMeters != null
+                  ? `أقرب بلاغ بعد ${Math.max(0, Math.round(nextHazardMeters))} متر`
+                  : 'مفيش بلاغات قدّامك على المسار'}
+              </T>
               {routeHazards.length > 0 && (
                 <T style={styles.hazardLine}>
                   على المسار: {routeHazards.length} بلاغ (
@@ -377,6 +429,15 @@ export default function TripScreen() {
   );
 }
 
+function ModeButton({ active, icon, label, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={[styles.modeBtn, active && styles.modeBtnActive]}>
+      <MaterialCommunityIcons name={icon} size={19} color={active ? colors.white : colors.teal} />
+      <T style={[styles.modeBtnText, active && { color: colors.white }]}>{label}</T>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   banner: {
@@ -393,19 +454,60 @@ const styles = StyleSheet.create({
   bannerNear: { backgroundColor: colors.red },
   bannerOff: { backgroundColor: colors.amber },
   bannerText: { color: colors.white, fontFamily: FONTS.bold, fontSize: 15, textAlign: 'center' },
-  panel: {
+  sheet: {
     backgroundColor: colors.card,
-    borderTopWidth: 1,
-    borderColor: colors.border,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 10,
     gap: 8,
+    shadowColor: '#0A1A2E',
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 12,
   },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    marginBottom: 2,
+  },
+  modeRow: { flexDirection: 'row-reverse', gap: 8 },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingVertical: 9,
+    backgroundColor: colors.white,
+  },
+  modeBtnActive: { backgroundColor: colors.teal, borderColor: colors.teal },
+  modeBtnText: { fontFamily: FONTS.bold, fontSize: 13.5, color: colors.teal },
+  modeNote: { fontSize: 11.5, color: colors.textSoft, textAlign: 'center', lineHeight: 17 },
+  navBar: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: colors.navy,
+    borderRadius: radius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  navStat: { alignItems: 'center', gap: 2, minWidth: 70 },
+  navStatValue: { fontFamily: FONTS.extraBold, fontSize: 16, color: colors.white },
+  navStatLabel: { fontSize: 10.5, color: '#9FB4CC' },
+  navDivider: { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.14)' },
   panelTitle: { fontFamily: FONTS.bold, fontSize: 15, color: colors.text, textAlign: 'center' },
   errorText: { color: colors.red, fontSize: 13, textAlign: 'center' },
   row: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  stat: { fontFamily: FONTS.bold, fontSize: 14, color: colors.text },
   hazardLine: { fontSize: 13, color: colors.textSoft, textAlign: 'center' },
   voiceNote: {
     fontFamily: FONTS.bold,
