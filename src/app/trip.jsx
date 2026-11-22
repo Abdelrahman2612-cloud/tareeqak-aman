@@ -380,7 +380,7 @@ export default function TripScreen() {
                 </View>
                 <View style={styles.navDivider} />
                 <View style={styles.navStat}>
-                  <T style={styles.navStatValue}>{etaMinutes != null ? `~${etaMinutes}` : '…'}</T>
+                  <T style={styles.navStatValue}>{etaMinutes != null ? `${etaMinutes}` : '…'}</T>
                   <T style={styles.navStatLabel}>دقيقة تقريبًا</T>
                 </View>
               </View>

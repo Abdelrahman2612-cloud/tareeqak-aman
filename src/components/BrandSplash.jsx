@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Animated, Image, StyleSheet, View } from 'react-native';
 import { colors, FONTS } from '../theme';
 import { T } from './T';
 
@@ -38,7 +37,7 @@ export default function BrandSplash({ ready, onDone }) {
       <Animated.View
         style={[styles.mark, { opacity: markOpacity, transform: [{ scale: markScale }] }]}
       >
-        <Ionicons name="navigate" size={42} color={colors.white} />
+        <Image source={require('../../assets/brand-mark.png')} style={styles.markImage} />
       </Animated.View>
       <Animated.View style={{ opacity: textOpacity, alignItems: 'center' }}>
         <T style={styles.name}>طريقك أمان</T>
@@ -60,10 +59,6 @@ const styles = StyleSheet.create({
   mark: {
     width: 88,
     height: 88,
-    borderRadius: 26,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 22,
     shadowColor: '#000',
     shadowOpacity: 0.35,
@@ -71,6 +66,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 10,
   },
+  markImage: { width: 88, height: 88 },
   name: { fontFamily: FONTS.black, fontSize: 30, color: colors.white },
   rule: { width: 44, height: 2, backgroundColor: colors.teal, borderRadius: 1, marginVertical: 12 },
   sub: { fontFamily: FONTS.semiBold, fontSize: 13, color: '#9FB4CC', letterSpacing: 1 },

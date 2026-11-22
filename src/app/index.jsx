@@ -8,6 +8,7 @@ import {
   TextInput,
   Keyboard,
   Alert,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -114,13 +115,7 @@ export default function HomeScreen() {
             <View style={styles.brandWrap}>
               {/* دخول المشرفين مخفي: ضغطة مطوّلة على علامة التطبيق */}
               <Pressable onLongPress={() => router.push('/admin')} delayLongPress={1500}>
-                <IconTile
-                  name="navigate"
-                  size={42}
-                  iconSize={21}
-                  color={colors.white}
-                  bg={colors.teal}
-                />
+                <Image source={require('../assets/brand-mark.png')} style={styles.brandMark} />
               </Pressable>
               <View>
                 <T style={styles.brandName}>طريقك أمان</T>
@@ -331,6 +326,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   brandWrap: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+  brandMark: { width: 42, height: 42 },
   brandName: { fontFamily: FONTS.extraBold, fontSize: 19, color: colors.white, textAlign: 'right' },
   brandSub: { fontFamily: FONTS.regular, fontSize: 11, color: '#8FA3BC', marginTop: 1, textAlign: 'right' },
   accountChip: {
