@@ -111,6 +111,11 @@ export default function MapScreen() {
         ))}
       </View>
 
+      {/* زرار الرحلة الآمنة */}
+      <Pressable style={({ pressed }) => [styles.tripBtn, pressed && { opacity: 0.85 }]} onPress={() => router.push('/trip')}>
+        <T style={{ fontSize: 20 }}>🧭</T>
+      </Pressable>
+
       {/* زرار موقعي */}
       <Pressable style={({ pressed }) => [styles.myLocBtn, pressed && { opacity: 0.85 }]} onPress={goMyLocation}>
         <T style={{ fontSize: 20 }}>🎯</T>
@@ -212,6 +217,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    elevation: 4,
+  },
+  tripBtn: {
+    position: 'absolute',
+    bottom: 76,
+    left: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 4,
   },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(10,26,46,0.5)', justifyContent: 'flex-end' },

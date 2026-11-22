@@ -28,7 +28,7 @@ export const MAP_HTML = `<!DOCTYPE html>
 <div id="err">الخريطة محتاجة اتصال بالإنترنت عشان تظهر 🌐</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map = null, markersLayer = null, pickMarker = null, meMarker = null, pickMode = false;
+var map = null, markersLayer = null, pickMarker = null, meMarker = null, routeLine = null, pickMode = false;
 function send(obj){ if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(obj)); }
 function makeIcon(color, icon, cls){
   var inner = '<div class="'+(cls||'pin')+'" style="background:'+color+'"><span>'+(icon||'')+'</span></div>';
@@ -79,6 +79,13 @@ function handle(msg){
     if (pickMode && msg.lat != null) setPick(msg.lat, msg.lng);
   } else if (msg.type === 'setPick'){
     setPick(msg.lat, msg.lng);
+  } else if (msg.type === 'route'){
+    if (routeLine){ map.removeLayer(routeLine); routeLine = null; }
+    if (msg.coords && msg.coords.length > 1){
+      routeLine = L.polyline(msg.coords.map(function(c){ return [c.lat, c.lng]; }),
+        { color:'#0D9488', weight:6, opacity:.85 }).addTo(map);
+      map.fitBounds(routeLine.getBounds(), { padding:[44,44] });
+    }
   } else if (msg.type === 'me'){
     if (meMarker) map.removeLayer(meMarker);
     meMarker = L.marker([msg.lat, msg.lng], { icon: makeIcon('#3B82F6','','me') }).addTo(map);

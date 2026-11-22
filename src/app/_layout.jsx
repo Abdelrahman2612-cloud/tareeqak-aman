@@ -50,6 +50,7 @@ export default function RootLayout() {
         <Stack.Screen name="auth" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="report" options={{ title: 'بلاغ جديد' }} />
         <Stack.Screen name="map" options={{ title: 'خريطة البلاغات' }} />
+        <Stack.Screen name="trip" options={{ title: 'الرحلة الآمنة' }} />
         <Stack.Screen name="track" options={{ title: 'تتبع بلاغ' }} />
         <Stack.Screen name="admin" options={{ title: 'لوحة تحكم المشرفين' }} />
       </Stack>

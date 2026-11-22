@@ -16,6 +16,7 @@ export default function LeafletMap({
   pickMode = false,
   pickPosition = null,
   myPosition = null,
+  route = null,
   onMarkerPress = null,
   onPick = null,
   style = null,
@@ -25,6 +26,7 @@ export default function LeafletMap({
   const [loading, setLoading] = useState(true);
 
   const markersKey = useMemo(() => JSON.stringify(markers), [markers]);
+  const routeKey = useMemo(() => JSON.stringify(route), [route]);
 
   function post(obj) {
     webRef.current?.postMessage(JSON.stringify(obj));
@@ -49,6 +51,10 @@ export default function LeafletMap({
   useEffect(() => {
     if (ready && myPosition) post({ type: 'me', lat: myPosition.lat, lng: myPosition.lng });
   }, [ready, myPosition ? myPosition.lat : null, myPosition ? myPosition.lng : null]);
+
+  useEffect(() => {
+    if (ready) post({ type: 'route', coords: route });
+  }, [ready, routeKey]);
 
   function handleMessage(event) {
     let msg;
