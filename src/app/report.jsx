@@ -147,7 +147,38 @@ export default function ReportScreen() {
         try {
           imageUrl = await uploadImageToCloudinary(photo.uri);
         } catch (e) {
-          imageUrl = null;
+          // رفع الصورة فشل: نسأل المستخدم صراحة بدل ما نسجّل البلاغ من غير صورة في صمت
+          const choice = await new Promise((resolve) => {
+            Alert.alert(
+              'الصورة ما اترفعتش',
+              'حصلت مشكلة أثناء رفع الصورة. تحب تعيد المحاولة ولا تكمل من غيرها؟',
+              [
+                { text: 'إعادة المحاولة', onPress: () => resolve('retry') },
+                { text: 'كمل من غير صورة', onPress: () => resolve('continue') },
+                { text: 'إلغاء', style: 'cancel', onPress: () => resolve('cancel') },
+              ],
+              { cancelable: true, onDismiss: () => resolve('cancel') }
+            );
+          });
+          if (choice === 'cancel') {
+            setSubmitting(false);
+            setSubmitStage('');
+            return;
+          }
+          if (choice === 'retry') {
+            try {
+              imageUrl = await uploadImageToCloudinary(photo.uri);
+            } catch (e2) {
+              setSubmitting(false);
+              setSubmitStage('');
+              Alert.alert(
+                'الصورة ما اترفعتش تاني',
+                'ممكن تكمل من غير صورة دلوقتي، أو تعيد إرسال البلاغ بعد شوية والنت أحسن.'
+              );
+              return;
+            }
+          }
+          // choice === 'continue': يتسجل البلاغ من غير صورة بقرار منه
         }
       }
 
