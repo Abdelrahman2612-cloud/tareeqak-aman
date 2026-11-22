@@ -287,6 +287,11 @@ export default function TripScreen() {
 
           {phase === 'active' && (
             <>
+              {!arVoice && (
+                <T style={styles.voiceNote}>
+                  🔇 التنبيه الصوتي غير متاح على جهازك (مفيش صوت عربي متسطب) — التنبيهات المرئية شغالة
+                </T>
+              )}
               <View style={styles.row}>
                 <T style={styles.stat}>
                   المتبقي: {remainingMeters != null ? (remainingMeters / 1000).toFixed(1) : '…'} كم
@@ -367,6 +372,12 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   stat: { fontFamily: FONTS.bold, fontSize: 14, color: colors.text },
   hazardLine: { fontSize: 13, color: colors.textSoft, textAlign: 'center' },
+  voiceNote: {
+    fontFamily: FONTS.bold,
+    fontSize: 12.5,
+    color: colors.amber,
+    textAlign: 'center',
+  },
   primaryBtn: {
     backgroundColor: colors.teal,
     borderRadius: radius.lg,

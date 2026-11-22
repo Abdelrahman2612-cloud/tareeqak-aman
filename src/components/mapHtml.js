@@ -21,11 +21,17 @@ export const MAP_HTML = `<!DOCTYPE html>
   .pin-new { animation:pulse 1.6s ease-out infinite; }
   #err { display:none; position:absolute; z-index:999; inset:0; background:#F4F7FA; color:#0F172A;
          font-family:sans-serif; text-align:center; padding-top:45%; font-size:15px; }
+  #tile-err { display:none; position:absolute; z-index:500; left:50%; top:70px; transform:translateX(-50%);
+              background:rgba(255,255,255,.94); color:#0F172A; font-family:sans-serif; text-align:center;
+              font-size:13px; line-height:1.8; padding:10px 14px; border-radius:12px;
+              box-shadow:0 6px 18px rgba(10,26,46,.18); max-width:74%; }
+  #tile-err small { color:#64748B; font-size:12px; }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div id="err">الخريطة محتاجة اتصال بالإنترنت عشان تظهر 🌐</div>
+<div id="tile-err">الخريطة الأساسية مش متاحة دلوقتي 🗺️<br/><small>المسار والبلاغات والتنبيهات هتفضل شغالة عادي</small></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var map = null, markersLayer = null, pickMarker = null, meMarker = null, routeLine = null, pickMode = false;
@@ -37,10 +43,25 @@ function makeIcon(color, icon, cls){
 }
 function init(){
   if (typeof L === 'undefined') { document.getElementById('err').style.display='block'; return; }
-  map = L.map('map', { zoomControl:true, attributionControl:true });
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  map = L.map('map', { zoomControl:false, attributionControl:true });
+  L.control.zoom({ position:'bottomleft' }).addTo(map); // بعيد عن بانر التنبيهات فوق
+  // لو التايلز فشلت (مثلاً مفيش نت أو السيرفر رفض) بنشيلها ونظهر رسالة نضيفة
+  // بدل شاشة مليانة تايلز مكسورة — من غير ما نعيد المحاولة أو نغير المزود
+  var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap'
-  }).addTo(map);
+  });
+  var tileErrs = 0, tilesGaveUp = false;
+  tiles.on('tileerror', function(){
+    if (tilesGaveUp) return;
+    if (++tileErrs >= 6) {
+      tilesGaveUp = true;
+      if (map) map.removeLayer(tiles);
+      var el = document.getElementById('tile-err');
+      if (el) el.style.display = 'block';
+      send({ type:'basemapUnavailable' });
+    }
+  });
+  tiles.addTo(map);
   map.setView([30.0444, 31.2357], 12); // القاهرة افتراضياً
   markersLayer = L.layerGroup().addTo(map);
   map.on('click', function(e){
