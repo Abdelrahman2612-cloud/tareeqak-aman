@@ -11,6 +11,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
   body { font-family: 'Cairo', sans-serif; background: #F4F7FA; color: #0F172A; }
   .chip { border: 1px solid; }
@@ -33,6 +34,26 @@
     <button id="pinBtn"
       class="w-full mt-5 rounded-xl py-3 text-white text-lg font-bold transition hover:opacity-90"
       style="background:#376E68">دخول</button>
+  </div>
+</div>
+
+<!-- ======= تسجيل دخول المشرف (Firebase Auth) ======= -->
+<div id="authGate" class="hidden min-h-screen flex items-center justify-center" style="background:#0A1A2E">
+  <div class="bg-white rounded-2xl shadow-xl p-10 w-full max-w-sm text-center">
+    <div class="text-5xl mb-4">👤</div>
+    <h1 class="text-2xl font-black mb-1" style="color:#0A1A2E">تسجيل دخول المشرف</h1>
+    <p class="text-sm mb-6" style="color:#64748B">سجّل بحساب المشرف عشان تقدر تدير البلاغات</p>
+    <input id="emailInput" type="email" placeholder="admin@example.com" dir="ltr"
+      class="w-full text-left rounded-xl border-2 px-4 py-3 outline-none focus:border-[#376E68] mb-3"
+      style="border-color:#E5EAF0" />
+    <input id="passInput" type="password" placeholder="كلمة السر" dir="ltr"
+      class="w-full text-left rounded-xl border-2 px-4 py-3 outline-none focus:border-[#376E68]"
+      style="border-color:#E5EAF0" />
+    <p id="authError" class="hidden text-sm mt-3 font-bold" style="color:#A8554D"></p>
+    <button id="authBtn"
+      class="w-full mt-5 rounded-xl py-3 text-white text-lg font-bold transition hover:opacity-90"
+      style="background:#376E68">دخول</button>
+    <p class="text-xs mt-5" style="color:#64748B">حساب المشرف بيتعمل من Firebase Console (Authentication → Users)</p>
   </div>
 </div>
 
@@ -101,6 +122,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 // ======= بوابة الـ PIN (SHA-256 — ديمو تخرج مش حماية إنتاجية) =======
 const PIN_HASH = 'b6316aa9a0bfcfd8f2f36eae197c78173d893fb9409d12d0f1815a1fe62c89da'; // sha256("2612")
@@ -109,23 +131,62 @@ async function sha256(text) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 const gate = document.getElementById('pinGate');
+const authGate = document.getElementById('authGate');
 const dash = document.getElementById('dashboard');
+
+// المرحلة 1: الـ PIN شاشة خفيفة بس — اللي بيحمي التعديل فعلًا هو تسجيل الدخول + قواعد Firestore
 async function tryPin() {
   const val = document.getElementById('pinInput').value.trim();
   if ((await sha256(val)) === PIN_HASH) {
     sessionStorage.setItem('admin_ok', '1');
-    showDash();
+    showAuth();
   } else {
     document.getElementById('pinError').classList.remove('hidden');
   }
 }
 document.getElementById('pinBtn').addEventListener('click', tryPin);
 document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.removeItem('admin_ok'); location.reload();
+
+// المرحلة 2: تسجيل دخول المشرف بحساب Firebase Auth
+function showAuth() { gate.classList.add('hidden'); authGate.classList.remove('hidden'); }
+async function adminSignIn() {
+  const btn = document.getElementById('authBtn');
+  const err = document.getElementById('authError');
+  btn.disabled = true; btn.textContent = 'بيسجّل…'; err.classList.add('hidden');
+  try {
+    await auth.signInWithEmailAndPassword(
+      document.getElementById('emailInput').value.trim(),
+      document.getElementById('passInput').value
+    );
+  } catch (e) {
+    err.textContent = ({ 'auth/invalid-credential': 'البريد أو كلمة السر غلط', 'auth/invalid-email': 'البريد الإلكتروني مش مظبوط', 'auth/too-many-requests': 'محاولات كتير، استنى شوية' })[e.code] || 'حصل خطأ أثناء تسجيل الدخول';
+    err.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'دخول';
+  }
+}
+document.getElementById('authBtn').addEventListener('click', adminSignIn);
+document.getElementById('passInput').addEventListener('keydown', e => { if (e.key === 'Enter') adminSignIn(); });
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  sessionStorage.removeItem('admin_ok');
+  await auth.signOut();
+  location.reload();
 });
-function showDash() { gate.classList.add('hidden'); dash.classList.remove('hidden'); startListening(); }
-if (sessionStorage.getItem('admin_ok') === '1') showDash();
+
+// الدخول للوحة نفسها محكوم بحالة Firebase Auth — مش بس الـ PIN
+auth.onAuthStateChanged(user => {
+  if (user && sessionStorage.getItem('admin_ok') === '1') {
+    gate.classList.add('hidden');
+    authGate.classList.add('hidden');
+    dash.classList.remove('hidden');
+    document.getElementById('logoutBtn').textContent = 'خروج (' + (user.email || '') + ')';
+    if (!listening) { listening = true; startListening(); }
+  } else if (sessionStorage.getItem('admin_ok') === '1') {
+    showAuth();
+  }
+});
+let listening = false;
 
 // ======= نفس تعريفات التطبيق =======
 const CATEGORIES = {
@@ -212,10 +273,16 @@ function renderAll() {
 async function advanceStatus(id, next) {
   const r = reports.find(x => x.id === id);
   const hist = Array.isArray(r?.statusHistory) ? r.statusHistory : [];
-  await db.collection('reports').doc(id).update({
-    status: next,
-    statusHistory: [...hist, { status: next, at: Date.now() }],
-  });
+  try {
+    await db.collection('reports').doc(id).update({
+      status: next,
+      statusHistory: [...hist, { status: next, at: Date.now() }],
+    });
+  } catch (e) {
+    alert(e.code === 'permission-denied'
+      ? 'مفيش صلاحية تعديل — اتأكد إنك مسجل دخول بحساب المشرف'
+      : 'الحالة ماتحدثتش: ' + e.message);
+  }
 }
 
 // ======= الخريطة =======

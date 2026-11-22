@@ -13,6 +13,7 @@ import { colors, radius, shadow, STATUS, STATUS_ORDER, CATEGORIES, CATEGORY_KEYS
 import { listenToReports, updateReportStatus, deleteReport } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
 import { ADMIN_PIN } from '../config/admin';
+import { useAuth, signInWithEmail, signOut, authErrorMessage } from '../lib/auth';
 import { T } from '../components/T';
 import { StatusChip, CategoryBadge, SeverityChip, Card, EmptyState, FirebaseNotConfigured } from '../components/ui';
 
@@ -21,6 +22,11 @@ export default function AdminScreen() {
   const [authed, setAuthed] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
+  const { user } = useAuth();
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [signInBusy, setSignInBusy] = useState(false);
+  const [signInError, setSignInError] = useState('');
 
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +109,68 @@ export default function AdminScreen() {
     );
   }
 
+  async function adminSignIn() {
+    if (signInBusy) return;
+    setSignInBusy(true);
+    setSignInError('');
+    try {
+      await signInWithEmail(adminEmail, adminPass);
+    } catch (e) {
+      setSignInError(authErrorMessage(e));
+    } finally {
+      setSignInBusy(false);
+    }
+  }
+
+  // المرحلة التانية: تسجيل دخول المشرف بحساب Firebase Auth
+  // قواعد Firestore بتمنع تعديل/حذف البلاغات إلا لمستخدم مسجل دخوله
+  if (!user) {
+    return (
+      <View style={styles.pinWrap}>
+        <View style={styles.pinIconWrap}>
+          <T style={styles.pinIcon}>👤</T>
+        </View>
+        <T style={styles.pinTitle}>تسجيل دخول المشرف</T>
+        <T style={styles.pinSub}>سجّل بحساب المشرف عشان تقدر تدير البلاغات</T>
+        <TextInput
+          style={[styles.pinInput, styles.authInput]}
+          value={adminEmail}
+          onChangeText={(t) => {
+            setAdminEmail(t);
+            setSignInError('');
+          }}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="admin@example.com"
+          placeholderTextColor="#9AA7B8"
+          textAlign="left"
+        />
+        <TextInput
+          style={[styles.pinInput, styles.authInput, { marginTop: 10 }]}
+          value={adminPass}
+          onChangeText={(t) => {
+            setAdminPass(t);
+            setSignInError('');
+          }}
+          secureTextEntry
+          placeholder="كلمة السر"
+          placeholderTextColor="#9AA7B8"
+          textAlign="left"
+          onSubmitEditing={adminSignIn}
+        />
+        {!!signInError && <T style={styles.pinError}>{signInError}</T>}
+        <Pressable
+          style={({ pressed }) => [styles.pinBtn, (pressed || signInBusy) && { opacity: 0.85 }]}
+          onPress={adminSignIn}
+        >
+          <T style={styles.pinBtnText}>{signInBusy ? 'بيسجّل…' : 'دخول'}</T>
+        </Pressable>
+        <T style={styles.pinHint}>حساب المشرف بيتعمل من Firebase Console (Authentication → Users)</T>
+      </View>
+    );
+  }
+
   const stats = {
     total: reports.length,
     new: reports.filter((r) => r.status === 'new').length,
@@ -119,7 +187,11 @@ export default function AdminScreen() {
     try {
       await updateReportStatus(report.id, newStatus, report.statusHistory);
     } catch (e) {
-      Alert.alert('حصل خطأ', 'الحالة ماتحدثتش. اتأكد من الإنترنت وجرب تاني.');
+      const denied = String(e?.code || '').includes('permission-denied');
+      Alert.alert(
+        'حصل خطأ',
+        denied ? 'مفيش صلاحية تعديل — اتأكد إنك مسجل دخول بحساب المشرف.' : 'الحالة ماتحدثتش. اتأكد من الإنترنت وجرب تاني.'
+      );
     } finally {
       setBusyId(null);
     }
@@ -135,7 +207,11 @@ export default function AdminScreen() {
           try {
             await deleteReport(report.id);
           } catch (e) {
-            Alert.alert('حصل خطأ', 'البلاغ ماتحذفش. جرب تاني.');
+            const denied = String(e?.code || '').includes('permission-denied');
+            Alert.alert(
+              'حصل خطأ',
+              denied ? 'مفيش صلاحية حذف — اتأكد إنك مسجل دخول بحساب المشرف.' : 'البلاغ ماتحذفش. جرب تاني.'
+            );
           }
         },
       },
@@ -157,6 +233,16 @@ export default function AdminScreen() {
         />
       }
     >
+      {/* شريط المشرف المسجل */}
+      <View style={styles.adminBar}>
+        <T style={styles.adminBarText} numberOfLines={1}>
+          مسجل كمشرف: {user.email || user.displayName || ''}
+        </T>
+        <Pressable onPress={() => signOut()}>
+          <T style={styles.adminBarOut}>خروج</T>
+        </Pressable>
+      </View>
+
       {/* إحصائيات عامة */}
       <View style={styles.statsRow}>
         <Stat label="الكل" value={stats.total} color={colors.navy} active={statusFilter === 'all'} onPress={() => setStatusFilter('all')} />
@@ -286,6 +372,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: 6,
   },
+  authInput: { width: 280, fontSize: 15, letterSpacing: 0, fontFamily: FONTS.semiBold, paddingHorizontal: 14 },
   pinError: { color: colors.red, fontSize: 13, marginTop: 8, fontFamily: FONTS.semiBold },
   pinBtn: {
     backgroundColor: colors.teal,
@@ -297,6 +384,20 @@ const styles = StyleSheet.create({
   },
   pinBtnText: { color: '#fff', fontSize: 16, fontFamily: FONTS.extraBold },
   pinHint: { fontSize: 11.5, color: colors.textSoft, marginTop: 20, textAlign: 'center' },
+  adminBar: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  adminBarText: { fontSize: 12.5, color: colors.textSoft, fontFamily: FONTS.semiBold, flex: 1 },
+  adminBarOut: { fontSize: 12.5, color: colors.red, fontFamily: FONTS.bold },
   statsRow: { flexDirection: 'row-reverse', gap: 10 },
   statCard: {
     flex: 1,
