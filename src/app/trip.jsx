@@ -139,7 +139,7 @@ export default function TripScreen() {
         setSimulating(false);
         if (!arrivedRef.current) {
           arrivedRef.current = true;
-          showBanner('وصلت لوجهتك 🏁', false);
+          showBanner('وصلت لوجهتك', false);
         }
       }
       setMyPos(interpolateRoute(routeCoords, simAlong.current));
@@ -171,7 +171,7 @@ export default function TripScreen() {
     const remaining = routeLength(routeCoords) - myRoutePos.alongMeters;
     if (remaining <= ARRIVAL_METERS && !arrivedRef.current) {
       arrivedRef.current = true;
-      showBanner('وصلت لوجهتك 🏁', false);
+      showBanner('وصلت لوجهتك', false);
       speak('وصلنا لوجهتك');
       return;
     }
@@ -187,7 +187,7 @@ export default function TripScreen() {
           decision === 'near'
             ? `${label} قريب جدًا — حوالي ${rounded} متر قدّامك`
             : `انتبه: ${label} بعد حوالي ${rounded} متر على طريقك`;
-        showBanner(`${CATEGORIES[h.hazard.category]?.icon || '⚠️'} ${text}`, decision === 'near');
+        showBanner(text, decision === 'near');
         speak(`انتبه، ${label} بعد حوالي ${rounded} متر`);
         break; // تنبيه واحد في المرة
       }
@@ -296,10 +296,10 @@ export default function TripScreen() {
         <View style={styles.panel}>
           {phase === 'pick' && (
             <>
-              <T style={styles.panelTitle}>حدد وجهتك بضغطة على الخريطة 📍</T>
+              <T style={styles.panelTitle}>حدد وجهتك بضغطة على الخريطة</T>
               {destination && myPos && (
                 <T style={styles.distLine}>
-                  📍 الوجهة على بعد {(haversineMeters(myPos, destination) / 1000).toFixed(1)} كم تقريبًا (خط مستقيم)
+                  الوجهة على بعد {(haversineMeters(myPos, destination) / 1000).toFixed(1)} كم تقريبًا (خط مستقيم)
                 </T>
               )}
               {routeError ? <T style={styles.errorText}>{routeError}</T> : null}
@@ -308,7 +308,7 @@ export default function TripScreen() {
                 disabled={!destination}
                 onPress={confirmDestination}
               >
-                <T style={styles.primaryBtnText}>ابدأ الرحلة 🧭</T>
+                <T style={styles.primaryBtnText}>ابدأ الرحلة</T>
               </Pressable>
             </>
           )}
@@ -324,7 +324,7 @@ export default function TripScreen() {
             <>
               {!arVoice && (
                 <T style={styles.voiceNote}>
-                  🔇 التنبيه الصوتي غير متاح على جهازك (مفيش صوت عربي متسطب) — التنبيهات المرئية شغالة
+                  التنبيه الصوتي غير متاح على جهازك (مفيش صوت عربي متسطب) — التنبيهات المرئية شغالة
                 </T>
               )}
               <View style={styles.row}>
@@ -334,13 +334,13 @@ export default function TripScreen() {
                 <T style={styles.stat}>
                   {nextHazardMeters != null
                     ? `أقرب بلاغ بعد ${Math.max(0, Math.round(nextHazardMeters))} م`
-                    : 'مفيش بلاغات قدّامك ✅'}
+                    : 'مفيش بلاغات قدّامك'}
                 </T>
               </View>
               {routeHazards.length > 0 && (
                 <T style={styles.hazardLine}>
                   على المسار: {routeHazards.length} بلاغ (
-                  {[...new Set(routeHazards.map((h) => CATEGORIES[h.hazard.category]?.icon || '⚠️'))].join(' ')}
+                  {[...new Set(routeHazards.map((h) => CATEGORIES[h.hazard.category]?.label || 'بلاغ'))].join('، ')}
                   )
                 </T>
               )}

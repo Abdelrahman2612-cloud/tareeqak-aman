@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import { T } from '../components/T';
+import { Icon } from '../components/Icon';
 import { colors, radius, STATUS, CATEGORIES, CATEGORY_KEYS, SEVERITY, formatDate, FONTS } from '../theme';
 import { listenToReports } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
@@ -113,12 +114,12 @@ export default function MapScreen() {
 
       {/* زرار الرحلة الآمنة */}
       <Pressable style={({ pressed }) => [styles.tripBtn, pressed && { opacity: 0.85 }]} onPress={() => router.push('/trip')}>
-        <T style={{ fontSize: 20 }}>🧭</T>
+        <Icon name="navigate" size={20} color="#fff" />
       </Pressable>
 
       {/* زرار موقعي */}
       <Pressable style={({ pressed }) => [styles.myLocBtn, pressed && { opacity: 0.85 }]} onPress={goMyLocation}>
-        <T style={{ fontSize: 20 }}>🎯</T>
+        <Icon name="locate" size={20} color={colors.teal} />
       </Pressable>
 
       {/* كارت البلاغ المحدد */}

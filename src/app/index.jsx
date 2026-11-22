@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, radius, shadow, STATUS, CATEGORIES, formatDate, FONTS } from '../theme';
+import { colors, radius, shadow, STATUS, CATEGORIES, formatDate, FONTS, spacing } from '../theme';
 import { listenToReports } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
 import { normalizeTrackingCode } from '../lib/trackingCode';
@@ -20,6 +20,7 @@ import { useAuth, signOut } from '../lib/auth';
 import { hasSeenOnboarding } from './onboarding';
 import { T } from '../components/T';
 import { StatusChip, CategoryBadge, EmptyState, Card } from '../components/ui';
+import { Icon, IconTile } from '../components/Icon';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -75,72 +76,103 @@ export default function HomeScreen() {
     if (c) router.push({ pathname: '/track', params: { code: c } });
   }
 
+  function onAccount() {
+    if (!user) {
+      router.push('/auth');
+    } else {
+      Alert.alert(
+        'حسابك',
+        user.displayName ? `${user.displayName}\n${user.email || ''}` : user.email || '',
+        [
+          { text: 'تسجيل الخروج', style: 'destructive', onPress: () => signOut() },
+          { text: 'إلغاء', style: 'cancel' },
+        ]
+      );
+    }
+  }
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+  const today = new Intl.DateTimeFormat('ar-EG', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date());
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 36 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.teal} />
         }
       >
         {/* الهيدر */}
-        <LinearGradient colors={[colors.navy, colors.navyLight]} style={styles.hero}>
-          <View style={styles.heroTopRow}>
+        <LinearGradient colors={[colors.navy, colors.navySoft]} style={styles.hero}>
+          <View style={styles.topRow}>
+            <View style={styles.brandWrap}>
+              {/* دخول المشرفين مخفي: ضغطة مطوّلة على علامة التطبيق */}
+              <Pressable onLongPress={() => router.push('/admin')} delayLongPress={1500}>
+                <IconTile
+                  name="navigate"
+                  size={42}
+                  iconSize={21}
+                  color={colors.white}
+                  bg={colors.teal}
+                />
+              </Pressable>
+              <View>
+                <T style={styles.brandName}>طريقك أمان</T>
+                <T style={styles.brandSub}>بلاغات الطرق في مصر</T>
+              </View>
+            </View>
             <Pressable
               style={({ pressed }) => [styles.accountChip, pressed && { opacity: 0.8 }]}
-              onPress={() => {
-                if (!user) {
-                  router.push('/auth');
-                } else {
-                  Alert.alert(
-                    'حسابك',
-                    user.displayName ? `${user.displayName}\n${user.email || ''}` : user.email || '',
-                    [
-                      { text: 'تسجيل الخروج', style: 'destructive', onPress: () => signOut() },
-                      { text: 'إلغاء', style: 'cancel' },
-                    ]
-                  );
-                }
-              }}
+              onPress={onAccount}
             >
-              <T style={styles.accountChipIcon}>{user ? '👤' : '🔑'}</T>
+              <Icon
+                name={user ? 'person-circle-outline' : 'key-outline'}
+                size={15}
+                color="#C9D8EA"
+              />
               <T style={styles.accountChipText} numberOfLines={1}>
-                {user ? user.displayName || user.email : 'تسجيل الدخول'}
+                {user ? user.displayName || user.email : 'دخول'}
               </T>
             </Pressable>
           </View>
 
-          {/* دخول المشرفين مخفي: ضغطة مطوّلة على اللوجو/الاسم */}
-          <Pressable
-            onLongPress={() => router.push('/admin')}
-            delayLongPress={1500}
-            style={{ alignItems: 'center' }}
-          >
-            <View style={styles.heroBadge}>
-              <T style={styles.heroBadgeIcon}>📍</T>
-            </View>
-            <T style={styles.heroTitle}>طريقك أمان</T>
-          </Pressable>
-          <T style={styles.heroSub}>بلّغ عن مشاكل الطريق وتابع إصلاحها لحد ما تتحل</T>
+          <View style={styles.greetWrap}>
+            <T style={styles.greeting}>
+              {greeting}
+              {user?.displayName ? ` يا ${user.displayName.split(' ')[0]}` : ''}
+            </T>
+            <T style={styles.dateLine}>{today}</T>
+          </View>
 
+          {/* النداء الأساسي */}
           <Pressable
-            style={({ pressed }) => [styles.reportBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.92, transform: [{ scale: 0.985 }] }]}
             onPress={() => router.push('/report')}
           >
-            <T style={styles.reportBtnIcon}>🚨</T>
-            <T style={styles.reportBtnText}>أبلغ عن مشكلة</T>
+            <View style={styles.ctaTextWrap}>
+              <T style={styles.ctaTitle}>أبلغ عن مشكلة في الطريق</T>
+              <T style={styles.ctaSub}>صورة وموقع — والبلاغ بيوصل للمختصين فورًا</T>
+            </View>
+            <View style={styles.ctaIconWrap}>
+              <Icon name="megaphone-outline" size={26} color={colors.white} />
+            </View>
           </Pressable>
 
           {/* بحث برقم البلاغ */}
           <View style={styles.searchBox}>
-            <Pressable onPress={goTrack} style={styles.searchBtn}>
-              <T style={styles.searchBtnText}>تتبع</T>
+            <Pressable onPress={goTrack} style={styles.searchBtn} hitSlop={8}>
+              <Icon name="arrow-back" size={16} color={colors.white} />
             </Pressable>
             <TextInput
               style={styles.searchInput}
               placeholder="عندك رقم بلاغ؟ اكتبه هنا (TA-123456)"
-              placeholderTextColor="#8FA3BC"
+              placeholderTextColor="#7E93AC"
               value={code}
               onChangeText={setCode}
               autoCapitalize="characters"
@@ -149,15 +181,44 @@ export default function HomeScreen() {
               onSubmitEditing={goTrack}
               textAlign="right"
             />
+            <Icon name="search-outline" size={17} color="#7E93AC" style={{ marginLeft: 12 }} />
           </View>
         </LinearGradient>
 
         {/* إحصائيات */}
-        <View style={styles.statsRow}>
-          <StatCard label="كل البلاغات" value={stats.total} color={colors.navy} loading={loading} />
-          <StatCard label="جديدة" value={stats.new} color={colors.red} loading={loading} />
-          <StatCard label="قيد العمل" value={stats.inProgress} color={colors.amber} loading={loading} />
-          <StatCard label="اتحلت" value={stats.resolved} color={colors.green} loading={loading} />
+        <View style={styles.statsCard}>
+          <StatCell label="كل البلاغات" value={stats.total} color={colors.navy} loading={loading} />
+          <View style={styles.statDivider} />
+          <StatCell label="جديدة" value={stats.new} color={colors.red} loading={loading} />
+          <View style={styles.statDivider} />
+          <StatCell label="قيد العمل" value={stats.inProgress} color={colors.amber} loading={loading} />
+          <View style={styles.statDivider} />
+          <StatCell label="اتحلت" value={stats.resolved} color={colors.green} loading={loading} />
+        </View>
+
+        {/* خدمات التطبيق */}
+        <View style={styles.servicesRow}>
+          <ServiceTile
+            icon="map-outline"
+            tint={colors.blue}
+            title="الخريطة"
+            subtitle="البلاغات حواليك"
+            onPress={() => router.push('/map')}
+          />
+          <ServiceTile
+            icon="navigate-outline"
+            tint={colors.teal}
+            title="الرحلة الآمنة"
+            subtitle="تنبيهات على طريقك"
+            onPress={() => router.push('/trip')}
+          />
+          <ServiceTile
+            icon="receipt-outline"
+            tint={colors.amber}
+            title="تتبع بلاغ"
+            subtitle="برقمه المرجعي"
+            onPress={() => router.push('/track')}
+          />
         </View>
 
         {/* بلاغاتي */}
@@ -172,46 +233,31 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* اختصارات */}
-        <View style={styles.shortcuts}>
-          <Shortcut
-            icon="🗺️"
-            title="الخريطة"
-            subtitle="شوف البلاغات حواليك"
-            onPress={() => router.push('/map')}
-          />
-          <Shortcut
-            icon="🔎"
-            title="تتبع بلاغ"
-            subtitle="برقمه المرجعي"
-            onPress={() => router.push('/track')}
-          />
-        </View>
-
         {/* أحدث البلاغات */}
         <View style={styles.sectionHeader}>
           <T style={styles.sectionTitle}>أحدث البلاغات</T>
-          <Pressable onPress={() => router.push('/map')}>
-            <T style={styles.sectionLink}>عرض الكل على الخريطة ←</T>
+          <Pressable onPress={() => router.push('/map')} style={styles.sectionLinkWrap}>
+            <T style={styles.sectionLink}>عرض الكل</T>
+            <Icon name="arrow-back" size={13} color={colors.teal} />
           </Pressable>
         </View>
 
         {!configured ? (
           <Card style={{ marginHorizontal: 16 }}>
             <EmptyState
-              icon="⚙️"
+              icon={<IconTile name="construct" size={56} iconSize={26} color={colors.teal} bg={colors.tealPale} />}
               title="البلاغات هتظهر هنا"
               subtitle="ظبط Firebase من ملف README (قسم الإعداد) وارجع هنا"
             />
           </Card>
         ) : loading ? (
           <Card style={{ marginHorizontal: 16 }}>
-            <EmptyState icon="⏳" title="بنحمّل البلاغات…" />
+            <EmptyState icon={<IconTile name="hourglass" size={56} iconSize={26} color={colors.teal} bg={colors.tealPale} />} title="بنحمّل البلاغات…" />
           </Card>
         ) : reports.length === 0 ? (
           <Card style={{ marginHorizontal: 16 }}>
             <EmptyState
-              icon="🛣️"
+              icon={<IconTile name="map" size={56} iconSize={26} color={colors.teal} bg={colors.tealPale} />}
               title="مفيش بلاغات لسه"
               subtitle="كون أول واحد يبلّغ عن مشكلة في طريقك"
             />
@@ -242,28 +288,29 @@ function ReportRow({ report: r, onPress }) {
         </T>
       </View>
       <StatusChip status={r.status} />
+      <Icon name="chevron-back" size={16} color={colors.textSoft} />
     </Pressable>
   );
 }
 
-function StatCard({ label, value, color, loading }) {
+function StatCell({ label, value, color, loading }) {
   return (
-    <View style={styles.statCard}>
+    <View style={styles.statCell}>
       <T style={[styles.statValue, { color }]}>{loading ? '…' : value}</T>
       <T style={styles.statLabel}>{label}</T>
     </View>
   );
 }
 
-function Shortcut({ icon, title, subtitle, onPress }) {
+function ServiceTile({ icon, tint, title, subtitle, onPress }) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.shortcut, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+      style={({ pressed }) => [styles.serviceTile, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
       onPress={onPress}
     >
-      <T style={styles.shortcutIcon}>{icon}</T>
-      <T style={styles.shortcutTitle}>{title}</T>
-      <T style={styles.shortcutSub}>{subtitle}</T>
+      <IconTile name={icon} size={46} iconSize={23} color={tint} />
+      <T style={styles.serviceTitle}>{title}</T>
+      <T style={styles.serviceSub}>{subtitle}</T>
     </Pressable>
   );
 }
@@ -273,135 +320,134 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: colors.bg },
   hero: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 28,
+    paddingTop: 10,
+    paddingBottom: 24,
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
+  },
+  topRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  heroTopRow: { alignSelf: 'stretch', alignItems: 'flex-start', marginBottom: 6 },
+  brandWrap: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+  brandName: { fontFamily: FONTS.extraBold, fontSize: 19, color: colors.white, textAlign: 'right' },
+  brandSub: { fontFamily: FONTS.regular, fontSize: 11, color: '#8FA3BC', marginTop: 1, textAlign: 'right' },
   accountChip: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: radius.full,
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
     paddingVertical: 6,
-    maxWidth: '70%',
+    maxWidth: '46%',
   },
-  accountChipIcon: { fontSize: 13 },
-  accountChipText: { color: '#DCE6F2', fontSize: 12.5, fontFamily: FONTS.semiBold },
-  heroBadge: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    backgroundColor: 'rgba(20,184,166,0.15)',
-    borderWidth: 2,
-    borderColor: 'rgba(20,184,166,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-  },
-  heroBadgeIcon: { fontSize: 34 },
-  heroTitle: { fontSize: 32, fontFamily: FONTS.black, color: colors.white, letterSpacing: 0.5 },
-  heroSub: { fontSize: 14.5, color: '#B8C7D9', marginTop: 6, textAlign: 'center', lineHeight: 22 },
-  reportBtn: {
+  accountChipText: { color: '#C9D8EA', fontSize: 12, fontFamily: FONTS.semiBold },
+  greetWrap: { marginTop: 22, alignItems: 'flex-end' },
+  greeting: { fontFamily: FONTS.black, fontSize: 26, color: colors.white, textAlign: 'right' },
+  dateLine: { fontFamily: FONTS.regular, fontSize: 12.5, color: '#8FA3BC', marginTop: 4, textAlign: 'right' },
+  cta: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
     backgroundColor: colors.teal,
-    borderRadius: radius.md,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    marginTop: 20,
+    borderRadius: radius.lg,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginTop: 18,
     ...shadow.raised,
   },
-  reportBtnIcon: { fontSize: 20 },
-  reportBtnText: { color: colors.white, fontSize: 17, fontFamily: FONTS.extraBold },
+  ctaTextWrap: { flex: 1, alignItems: 'flex-end' },
+  ctaTitle: { fontFamily: FONTS.extraBold, fontSize: 16.5, color: colors.white, textAlign: 'right' },
+  ctaSub: { fontFamily: FONTS.regular, fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 3, textAlign: 'right' },
+  ctaIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 14,
+  },
   searchBox: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: radius.md,
-    marginTop: 16,
-    alignSelf: 'stretch',
-    overflow: 'hidden',
+    marginTop: 14,
   },
   searchBtn: {
     backgroundColor: colors.teal,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     alignSelf: 'stretch',
     justifyContent: 'center',
+    borderTopLeftRadius: radius.md,
+    borderBottomLeftRadius: radius.md,
   },
-  searchBtnText: { color: colors.white, fontFamily: FONTS.bold, fontSize: 14 },
   searchInput: {
     flex: 1,
     color: colors.white,
     fontFamily: FONTS.regular,
-    fontSize: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    fontSize: 13.5,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
   },
-  statsRow: {
+  statsCard: {
+    flexDirection: 'row-reverse',
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginHorizontal: 16,
+    marginTop: 18,
+    paddingVertical: 14,
+    ...shadow.card,
+  },
+  statCell: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
+  statValue: { fontSize: 20, fontFamily: FONTS.black },
+  statLabel: { fontSize: 11, color: colors.textSoft, marginTop: 3, fontFamily: FONTS.semiBold },
+  servicesRow: {
     flexDirection: 'row-reverse',
     gap: 10,
     paddingHorizontal: 16,
-    marginTop: 20,
+    marginTop: 12,
   },
-  statCard: {
+  serviceTile: {
     flex: 1,
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 14,
     alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 4,
     ...shadow.card,
   },
-  statValue: { fontSize: 22, fontFamily: FONTS.black },
-  statLabel: { fontSize: 11.5, color: colors.textSoft, marginTop: 4, fontFamily: FONTS.semiBold },
+  serviceTitle: { fontSize: 13, fontFamily: FONTS.bold, color: colors.text, marginTop: 9 },
+  serviceSub: { fontSize: 10, color: colors.textSoft, marginTop: 2, textAlign: 'center' },
   sectionHeader: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginTop: 24,
+    marginTop: 22,
     marginBottom: 10,
   },
-  sectionTitle: { fontSize: 17, fontFamily: FONTS.extraBold, color: colors.text },
-  sectionLink: { fontSize: 13, color: colors.teal, fontFamily: FONTS.bold },
-  shortcuts: {
-    flexDirection: 'row-reverse',
-    gap: 10,
-    paddingHorizontal: 16,
-    marginTop: 20,
-  },
-  shortcut: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 6,
-    ...shadow.card,
-  },
-  shortcutIcon: { fontSize: 30, marginBottom: 8 },
-  shortcutTitle: { fontSize: 14, fontFamily: FONTS.bold, color: colors.text },
-  shortcutSub: { fontSize: 10.5, color: colors.textSoft, marginTop: 3, textAlign: 'center' },
+  sectionTitle: { fontSize: 16, fontFamily: FONTS.extraBold, color: colors.text },
+  sectionLinkWrap: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
+  sectionLink: { fontSize: 12.5, color: colors.teal, fontFamily: FONTS.bold },
   reportRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 12,
@@ -410,6 +456,6 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   reportRowBody: { flex: 1, alignItems: 'flex-end' },
-  reportRowTitle: { fontSize: 14.5, fontFamily: FONTS.bold, color: colors.text },
-  reportRowMeta: { fontSize: 11.5, color: colors.textSoft, marginTop: 3 },
+  reportRowTitle: { fontSize: 14, fontFamily: FONTS.bold, color: colors.text },
+  reportRowMeta: { fontSize: 11, color: colors.textSoft, marginTop: 3 },
 });

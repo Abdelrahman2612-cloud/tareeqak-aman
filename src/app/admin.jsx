@@ -16,6 +16,7 @@ import { ADMIN_PIN } from '../config/admin';
 import { useAuth, signInWithEmail, signOut, authErrorMessage } from '../lib/auth';
 import { T } from '../components/T';
 import { StatusChip, CategoryBadge, SeverityChip, Card, EmptyState, FirebaseNotConfigured } from '../components/ui';
+import { Icon, IconTile } from '../components/Icon';
 
 export default function AdminScreen() {
   const configured = isFirebaseConfigured();
@@ -81,7 +82,7 @@ export default function AdminScreen() {
     return (
       <View style={styles.pinWrap}>
         <View style={styles.pinIconWrap}>
-          <T style={styles.pinIcon}>🔐</T>
+          <Icon name="lock-closed" size={34} color={colors.teal} />
         </View>
         <T style={styles.pinTitle}>منطقة المشرفين</T>
         <T style={styles.pinSub}>ادخل الرقم السري عشان تكمل</T>
@@ -128,7 +129,7 @@ export default function AdminScreen() {
     return (
       <View style={styles.pinWrap}>
         <View style={styles.pinIconWrap}>
-          <T style={styles.pinIcon}>👤</T>
+          <Icon name="person" size={34} color={colors.teal} />
         </View>
         <T style={styles.pinTitle}>تسجيل دخول المشرف</T>
         <T style={styles.pinSub}>سجّل بحساب المشرف عشان تقدر تدير البلاغات</T>
@@ -274,7 +275,7 @@ export default function AdminScreen() {
       {loading ? (
         <Card><EmptyState icon="⏳" title="بنحمّل…" /></Card>
       ) : sorted.length === 0 ? (
-        <Card><EmptyState icon="📭" title="مفيش بلاغات هنا" subtitle="جرب فلتر تاني أو اعمل تحديث" /></Card>
+        <Card><EmptyState icon={<IconTile name="file-tray" size={56} iconSize={26} color={colors.teal} bg={colors.tealPale} />} title="مفيش بلاغات هنا" subtitle="جرب فلتر تاني أو اعمل تحديث" /></Card>
       ) : (
         sorted.map((r) => {
           const statusIdx = STATUS_ORDER.indexOf(r.status);
@@ -322,7 +323,10 @@ export default function AdminScreen() {
                   onPress={() => confirmDelete(r)}
                   disabled={busyId === r.id}
                 >
-                  <T style={[styles.actionBtnText, { color: colors.red }]}>🗑 حذف</T>
+                  <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 5 }}>
+                    <Icon name="trash" size={13} color={colors.red} />
+                    <T style={[styles.actionBtnText, { color: colors.red }]}>حذف</T>
+                  </View>
                 </Pressable>
               </View>
             </Card>

@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/cairo';
 import { colors, FONTS } from '../theme';
 import { AuthProvider } from '../lib/auth';
+import BrandSplash from '../components/BrandSplash';
 
 // خلّي شاشة البداية ظاهرة لحد ما الخطوط تتحمّل
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -31,7 +32,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  const splashReady = fontsLoaded || !!fontError;
 
   return (
     <AuthProvider>
@@ -54,6 +55,7 @@ export default function RootLayout() {
         <Stack.Screen name="track" options={{ title: 'تتبع بلاغ' }} />
         <Stack.Screen name="admin" options={{ title: 'لوحة تحكم المشرفين' }} />
       </Stack>
+      <BrandSplash ready={splashReady} />
     </AuthProvider>
   );
 }

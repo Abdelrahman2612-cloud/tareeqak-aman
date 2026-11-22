@@ -42,18 +42,18 @@ export function fontForWeight(weight) {
 }
 
 export const STATUS = {
-  new: { key: 'new', label: 'جديد', color: colors.red, bg: colors.redPale, icon: '🔴' },
-  in_progress: { key: 'in_progress', label: 'قيد العمل', color: colors.amber, bg: colors.amberPale, icon: '🟡' },
-  resolved: { key: 'resolved', label: 'تم الحل', color: colors.green, bg: colors.greenPale, icon: '🟢' },
+  new: { key: 'new', label: 'جديد', color: colors.red, bg: colors.redPale, icon: '🔴', ion: 'alert-circle' },
+  in_progress: { key: 'in_progress', label: 'قيد العمل', color: colors.amber, bg: colors.amberPale, icon: '🟡', ion: 'construct' },
+  resolved: { key: 'resolved', label: 'تم الحل', color: colors.green, bg: colors.greenPale, icon: '🟢', ion: 'checkmark-circle' },
 };
 export const STATUS_ORDER = ['new', 'in_progress', 'resolved'];
 
 export const CATEGORIES = {
-  pothole: { key: 'pothole', label: 'حفرة أو تصدعات', icon: '🕳️', color: '#8A6D4F' },
-  bump: { key: 'bump', label: 'مطب', icon: '🚧', color: '#96604A' },
-  lighting: { key: 'lighting', label: 'إنارة معطلة', icon: '💡', color: '#97834A' },
-  water: { key: 'water', label: 'تراكم مياه', icon: '🌊', color: '#5E7FA3' },
-  manhole: { key: 'manhole', label: 'بالوعة مكشوفة', icon: '⭕', color: '#7B7194' },
+  pothole: { key: 'pothole', label: 'حفرة أو تصدعات', icon: '🕳️', ion: 'warning', color: '#8A6D4F' },
+  bump: { key: 'bump', label: 'مطب', icon: '🚧', ion: 'speedometer', color: '#96604A' },
+  lighting: { key: 'lighting', label: 'إنارة معطلة', icon: '💡', ion: 'bulb', color: '#97834A' },
+  water: { key: 'water', label: 'تراكم مياه', icon: '🌊', ion: 'water', color: '#5E7FA3' },
+  manhole: { key: 'manhole', label: 'بالوعة مكشوفة', icon: '⭕', ion: 'ellipse-outline', color: '#7B7194' },
 };
 export const CATEGORY_KEYS = Object.keys(CATEGORIES);
 

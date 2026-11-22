@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radius, shadow, FONTS } from '../theme';
 import { T } from '../components/T';
 import { PrimaryButton } from '../components/ui';
+import { Icon } from '../components/Icon';
 import { signInWithEmail, signUpWithEmail, authErrorMessage } from '../lib/auth';
 import { isFirebaseConfigured } from '../config/firebase';
 
@@ -63,7 +64,7 @@ export default function AuthScreen() {
             {/* الهيدر */}
             <View style={styles.hero}>
               <View style={styles.logoCircle}>
-                <T style={styles.logoIcon}>🛡️</T>
+                <Icon name="shield-checkmark" size={38} color="#fff" />
               </View>
               <T style={styles.appName}>طريقك أمان</T>
               <T style={styles.tagline}>بلّغ عن مشاكل الطريق وتابع إصلاحها لحد ما تتحل</T>
@@ -133,7 +134,7 @@ export default function AuthScreen() {
 
               {error ? (
                 <View style={styles.errorBox}>
-                  <T style={styles.errorText}>⚠️ {error}</T>
+                  <T style={styles.errorText}>{error}</T>
                 </View>
               ) : null}
 
@@ -147,7 +148,7 @@ export default function AuthScreen() {
 
               {!configured && (
                 <T style={styles.configNote}>
-                  ⚙️ ظبط Firebase الأول من ملف README عشان تسجيل الدخول يشتغل.
+                  ظبط Firebase الأول من ملف README عشان تسجيل الدخول يشتغل.
                 </T>
               )}
             </View>

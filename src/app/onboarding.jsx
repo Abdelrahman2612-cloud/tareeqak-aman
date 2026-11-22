@@ -13,22 +13,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radius, FONTS } from '../theme';
 import { T } from '../components/T';
 import { PrimaryButton } from '../components/ui';
+import { IconTile } from '../components/Icon';
 
 const ONBOARDING_KEY = 'onboarding_seen_v1';
 
 const SLIDES = [
   {
-    icon: '🚨',
+    icon: 'megaphone',
     title: 'بلّغ عن مشكلة في ثواني',
     text: 'صوّر الحفرة أو العطل، حدد مكانه على الخريطة، وابعت البلاغ — من غير أي مكالمات أو ورق.',
   },
   {
-    icon: '🗺️',
+    icon: 'map',
     title: 'شوف كل البلاغات على الخريطة',
     text: 'خريطة تفاعلية بتعرض بلاغات الناس حواليك، ملوّنة حسب حالة كل بلاغ: جديد، قيد العمل، أو اتحل.',
   },
   {
-    icon: '🔎',
+    icon: 'search',
     title: 'تابع بلاغك برقم مرجعي',
     text: 'كل بلاغ ليه رقم مرجعي خاص بيه — ادخل بيه في أي وقت وشوف وصل لأي مرحلة لحد ما يتحل.',
   },
@@ -90,9 +91,7 @@ export default function OnboardingScreen() {
         >
           {SLIDES.map((s) => (
             <View key={s.title} style={[styles.slide, { width }]}>
-              <View style={styles.iconCircle}>
-                <T style={styles.icon}>{s.icon}</T>
-              </View>
+              <IconTile name={s.icon} size={96} iconSize={44} color={colors.teal} bg={colors.tealPale} style={{ borderRadius: 30, marginBottom: 24 }} />
               <T style={styles.title}>{s.title}</T>
               <T style={styles.text}>{s.text}</T>
             </View>
@@ -107,7 +106,7 @@ export default function OnboardingScreen() {
 
         <View style={styles.footer}>
           <PrimaryButton
-            title={last ? 'ابدأ دلوقتي 🚀' : 'التالي'}
+            title={last ? 'ابدأ دلوقتي' : 'التالي'}
             onPress={next}
             style={{ backgroundColor: colors.teal }}
           />

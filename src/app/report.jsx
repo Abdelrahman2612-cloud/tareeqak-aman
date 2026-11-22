@@ -30,6 +30,7 @@ import {
   FirebaseNotConfigured,
   Card,
 } from '../components/ui';
+import { Icon } from '../components/Icon';
 
 const STEPS = ['الصورة', 'التفاصيل', 'الموقع', 'المراجعة'];
 
@@ -124,7 +125,7 @@ export default function ReportScreen() {
         if (dup) {
           setSubmitting(false);
           Alert.alert(
-            '⚠️ في بلاغ مشابه قريب',
+            'في بلاغ مشابه قريب',
             `فيه بلاغ تاني عن نفس المشكلة على بعد ${formatDistance(dup.distance)} من هنا (${dup.report.trackingCode}).`,
             [
               {
@@ -174,7 +175,7 @@ export default function ReportScreen() {
     return (
       <View style={styles.successWrap}>
         <View style={styles.successIconWrap}>
-          <T style={styles.successIcon}>✅</T>
+          <Icon name="checkmark-circle" size={46} color={colors.green} />
         </View>
         <T style={styles.successTitle}>بلاغك اتسجل بنجاح!</T>
         <T style={styles.successSub}>احتفظ بالرقم المرجعي ده عشان تتابع حالة البلاغ:</T>
@@ -231,7 +232,7 @@ export default function ReportScreen() {
         {/* الخطوة ١: الصورة */}
         {step === 0 && (
           <View>
-            <T style={styles.h}>صوّر المشكلة 📸</T>
+            <T style={styles.h}>صوّر المشكلة</T>
             <T style={styles.p}>صورة واضحة للمشكلة بتخلي البلاغ أقوى وبتساعد فرق الصيانة.</T>
             {photo ? (
               <View>
@@ -241,11 +242,11 @@ export default function ReportScreen() {
             ) : (
               <View style={styles.photoBtns}>
                 <Pressable style={({ pressed }) => [styles.photoBtn, pressed && { opacity: 0.85 }]} onPress={pickFromCamera}>
-                  <T style={styles.photoBtnIcon}>📷</T>
+                  <Icon name="camera" size={28} color={colors.teal} />
                   <T style={styles.photoBtnText}>التقط صورة</T>
                 </Pressable>
                 <Pressable style={({ pressed }) => [styles.photoBtn, pressed && { opacity: 0.85 }]} onPress={pickFromGallery}>
-                  <T style={styles.photoBtnIcon}>🖼️</T>
+                  <Icon name="images" size={28} color={colors.teal} />
                   <T style={styles.photoBtnText}>من المعرض</T>
                 </Pressable>
               </View>
@@ -322,12 +323,12 @@ export default function ReportScreen() {
         {/* الخطوة ٣: الموقع */}
         {step === 2 && (
           <View style={{ flex: 1 }}>
-            <T style={styles.h}>فين المشكلة بالظبط؟ 📍</T>
+            <T style={styles.h}>فين المشكلة بالظبط؟</T>
             <T style={styles.p}>
               دوس على أي نقطة على الخريطة لتحديد المكان، أو استخدم موقعك الحالي.
             </T>
             <PrimaryButton
-              title={locLoading ? 'بنحدد موقعك…' : 'استخدم موقعي الحالي 🎯'}
+              title={locLoading ? 'بنحدد موقعك…' : 'استخدم موقعي الحالي'}
               onPress={() => useMyLocation(false)}
               loading={locLoading}
               style={{ marginVertical: 12 }}
@@ -387,7 +388,7 @@ export default function ReportScreen() {
                   {photo?.uri
                     ? isCloudinaryConfigured()
                       ? '✓ هتترفع مع البلاغ'
-                      : '⚠️ هتتسجل محليًا بس (Cloudinary مش متظبط)'
+                      : 'هتتسجل محليًا بس (Cloudinary مش متظبط)'
                     : 'من غير صورة'}
                 </T>
               </View>
@@ -408,7 +409,7 @@ export default function ReportScreen() {
           <PrimaryButton title="← التالي" onPress={next} disabled={!canNext()} style={{ flex: 2 }} />
         ) : (
           <PrimaryButton
-            title={submitting ? submitStage || 'جاري الإرسال…' : 'إرسال البلاغ 🚀'}
+            title={submitting ? submitStage || 'جاري الإرسال…' : 'إرسال البلاغ'}
             onPress={() => doSubmit(false)}
             loading={submitting && !submitStage}
             disabled={submitting}

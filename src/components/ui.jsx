@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, radius, shadow, STATUS, CATEGORIES, SEVERITY } from '../theme';
 import { T } from './T';
+import { Icon } from './Icon';
 
 export function StatusChip({ status }) {
   const s = STATUS[status] || STATUS.new;
@@ -14,7 +15,7 @@ export function StatusChip({ status }) {
 }
 
 export function CategoryBadge({ category, size = 40 }) {
-  const c = CATEGORIES[category] || { icon: '❓', label: category, color: colors.textSoft };
+  const c = CATEGORIES[category] || { icon: '❓', ion: 'help-circle', label: category, color: colors.textSoft };
   return (
     <View
       style={[
@@ -22,7 +23,9 @@ export function CategoryBadge({ category, size = 40 }) {
         { width: size, height: size, borderRadius: size * 0.32, backgroundColor: (c.color || colors.teal) + '1F' },
       ]}
     >
-      <T style={{ fontSize: size * 0.48 }}>{c.icon}</T>
+      {c.ion
+        ? <Icon name={c.ion} size={size * 0.5} color={c.color || colors.teal} />
+        : <T style={{ fontSize: size * 0.48 }}>{c.icon}</T>}
     </View>
   );
 }
@@ -89,7 +92,7 @@ export function Card({ children, style }) {
 export function EmptyState({ icon, title, subtitle }) {
   return (
     <View style={styles.empty}>
-      <T style={styles.emptyIcon}>{icon}</T>
+      {typeof icon === 'string' ? <T style={styles.emptyIcon}>{icon}</T> : icon}
       <T style={styles.emptyTitle}>{title}</T>
       {subtitle ? <T style={styles.emptySub}>{subtitle}</T> : null}
     </View>
@@ -100,7 +103,7 @@ export function EmptyState({ icon, title, subtitle }) {
 export function FirebaseNotConfigured() {
   return (
     <View style={styles.fbWrap}>
-      <T style={styles.fbIcon}>⚙️</T>
+      <Icon name="construct" size={44} color={colors.teal} style={{ marginBottom: 12 }} />
       <T style={styles.fbTitle}>خطوة واحدة فاضلة</T>
       <T style={styles.fbText}>
         التطبيق جاهز، بس محتاج تربطه بقاعدة بيانات Firebase المجانية.{'\n'}

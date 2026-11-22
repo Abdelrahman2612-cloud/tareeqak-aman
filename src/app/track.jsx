@@ -22,6 +22,7 @@ import {
   EmptyState,
   FirebaseNotConfigured,
 } from '../components/ui';
+import { Icon, IconTile } from '../components/Icon';
 
 export default function TrackScreen() {
   const params = useLocalSearchParams();
@@ -82,7 +83,7 @@ export default function TrackScreen() {
       {notFound && (
         <Card style={{ marginTop: 16 }}>
           <EmptyState
-            icon="🔍"
+            icon={<IconTile name="search" size={56} iconSize={26} color={colors.amber} bg={colors.amberPale} />}
             title="الرقم ده مش موجود"
             subtitle="اتأكد من الرقم المرجعي وحاول تاني — بيبدأ بـ TA- وبعدها ٦ أرقام"
           />
@@ -119,7 +120,10 @@ export default function TrackScreen() {
 
           {/* الخط الزمني للحالة */}
           <Card style={{ marginTop: 14 }}>
-            <T style={styles.timelineTitle}>🧭 مسار البلاغ</T>
+            <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+              <Icon name="flag" size={17} color={colors.teal} />
+              <T style={[styles.timelineTitle, { marginBottom: 0 }]}>مسار البلاغ</T>
+            </View>
             {STATUS_ORDER.map((sKey, i) => {
               const hist = (report.statusHistory || []).find((h) => h.status === sKey);
               const reached = !!hist || STATUS_ORDER.indexOf(report.status) >= i;
@@ -138,7 +142,7 @@ export default function TrackScreen() {
                         isCurrent && { borderColor: s.color },
                       ]}
                     >
-                      {done ? <T style={styles.timelineCheck}>✓</T> : null}
+                      {done ? <Icon name="checkmark" size={11} color="#fff" /> : null}
                     </View>
                     {i < STATUS_ORDER.length - 1 && (
                       <View
@@ -165,7 +169,10 @@ export default function TrackScreen() {
             })}
             {report.status === 'resolved' && (
               <View style={styles.doneBox}>
-                <T style={styles.doneNote}>🎉 المشكلة اتحلت. شكرًا لبلاغك!</T>
+                <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                  <Icon name="checkmark-circle" size={16} color={colors.green} />
+                  <T style={styles.doneNote}>المشكلة اتحلت. شكرًا لبلاغك!</T>
+                </View>
               </View>
             )}
           </Card>
