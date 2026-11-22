@@ -23,11 +23,11 @@ export default function BrandSplash({ ready, onDone }) {
       Animated.timing(textOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
     ]).start();
     const t = setTimeout(() => {
-      Animated.timing(overlay, { toValue: 0, duration: 380, useNativeDriver: true }).start(() => {
+      Animated.timing(overlay, { toValue: 0, duration: 280, useNativeDriver: true }).start(() => {
         setGone(true);
         onDone?.();
       });
-    }, 1250);
+    }, 800);
     return () => clearTimeout(t);
   }, [ready]);
 

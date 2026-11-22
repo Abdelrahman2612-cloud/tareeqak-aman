@@ -4,6 +4,9 @@ export const MAP_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<link rel="preconnect" href="https://unpkg.com" crossorigin/>
+<link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin/>
+<link rel="preconnect" href="https://tile.openstreetmap.fr" crossorigin/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   html, body, #map { margin:0; padding:0; height:100%; width:100%; background:#E8EEF4; }
