@@ -77,6 +77,18 @@ export default function TripScreen() {
     return unsub;
   }, []);
 
+  // نحدد موقعك أول ما تفتح الشاشة عشان نعرض بعد الوجهة قبل البدء ونوسّط الخريطة عليك
+  useEffect(() => {
+    (async () => {
+      try {
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (!perm.granted) return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setMyPos((cur) => cur || { lat: loc.coords.latitude, lng: loc.coords.longitude });
+      } catch (e) {}
+    })();
+  }, []);
+
   // فحص صوت عربي متاح على الجهاز — لو مش موجود بنكتفي بالبانر
   useEffect(() => {
     Speech.getAvailableVoicesAsync()
