@@ -16,6 +16,7 @@ export default function LeafletMap({
   pickMode = false,
   pickPosition = null,
   myPosition = null,
+  followMe = false,
   route = null,
   onMarkerPress = null,
   onPick = null,
@@ -49,8 +50,8 @@ export default function LeafletMap({
   }, [ready, pickPosition ? pickPosition.lat : null, pickPosition ? pickPosition.lng : null]);
 
   useEffect(() => {
-    if (ready && myPosition) post({ type: 'me', lat: myPosition.lat, lng: myPosition.lng });
-  }, [ready, myPosition ? myPosition.lat : null, myPosition ? myPosition.lng : null]);
+    if (ready && myPosition) post({ type: 'me', lat: myPosition.lat, lng: myPosition.lng, follow: followMe });
+  }, [ready, followMe, myPosition ? myPosition.lat : null, myPosition ? myPosition.lng : null]);
 
   useEffect(() => {
     if (ready) post({ type: 'route', coords: route });

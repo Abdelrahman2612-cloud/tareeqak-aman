@@ -17,10 +17,13 @@ import {
   interpolateRoute,
   hazardsOnRoute,
   nextAlert,
+  haversineMeters,
   OFF_ROUTE_METERS,
   ALERT_FAR_METERS,
   ALERT_NEAR_METERS,
 } from '../lib/trip';
+
+const ARRIVAL_METERS = 30; // أقل من كده نعتبرها وصول
 
 const SIM_SPEED_MPS = 8; // سرعة المحاكاة (~29 كم/س)
 const SIM_TICK_MS = 1000;
@@ -40,6 +43,7 @@ export default function TripScreen() {
   const [routeError, setRouteError] = useState('');
 
   const alertStates = useRef({}); // لكل بلاغ: { far, near } — بيتصفر مع كل رحلة جديدة
+  const arrivedRef = useRef(false); // تنبيه الوصول مرة واحدة بس
   const simAlong = useRef(0);
   const bannerTimer = useRef(null);
   const watchSub = useRef(null);
@@ -121,7 +125,10 @@ export default function TripScreen() {
       if (simAlong.current >= routeLength(routeCoords)) {
         simAlong.current = routeLength(routeCoords);
         setSimulating(false);
-        showBanner('وصلنا لنهاية المسار 🏁', false);
+        if (!arrivedRef.current) {
+          arrivedRef.current = true;
+          showBanner('وصلت لوجهتك 🏁', false);
+        }
       }
       setMyPos(interpolateRoute(routeCoords, simAlong.current));
     }, SIM_TICK_MS);
@@ -145,9 +152,17 @@ export default function TripScreen() {
 
   // منطق التنبيه مع كل تحديث موقع
   useEffect(() => {
-    if (phase !== 'active' || !myRoutePos) return;
+    if (phase !== 'active' || !myRoutePos || !routeCoords) return;
     setOffRoute(myRoutePos.offRouteMeters > OFF_ROUTE_METERS);
     if (myRoutePos.offRouteMeters > OFF_ROUTE_METERS) return;
+    // وصلنا لنهاية المسار؟ تنبيه وصول مرة واحدة
+    const remaining = routeLength(routeCoords) - myRoutePos.alongMeters;
+    if (remaining <= ARRIVAL_METERS && !arrivedRef.current) {
+      arrivedRef.current = true;
+      showBanner('وصلت لوجهتك 🏁', false);
+      speak('وصلنا لوجهتك');
+      return;
+    }
     for (const h of routeHazards) {
       const ahead = h.alongMeters - myRoutePos.alongMeters;
       const key = h.hazard.id;
@@ -195,6 +210,7 @@ export default function TripScreen() {
       setRouteCoords(route.coords);
       setRouteMeters(route.distanceMeters);
       alertStates.current = {};
+      arrivedRef.current = false;
       simAlong.current = myPos ? routePosition(route.coords, myPos).alongMeters : 0;
       setPhase('active');
       const km = (route.distanceMeters / 1000).toFixed(1);
@@ -221,6 +237,7 @@ export default function TripScreen() {
     setOffRoute(false);
     setSimulating(false);
     alertStates.current = {};
+    arrivedRef.current = false;
     Speech.stop();
   }
 
@@ -244,6 +261,7 @@ export default function TripScreen() {
           pickPosition={destination}
           onPick={setDestination}
           myPosition={myPos}
+          followMe={phase === 'active'}
           route={routeCoords}
           style={{ flex: 1 }}
         />
@@ -267,6 +285,11 @@ export default function TripScreen() {
           {phase === 'pick' && (
             <>
               <T style={styles.panelTitle}>حدد وجهتك بضغطة على الخريطة 📍</T>
+              {destination && myPos && (
+                <T style={styles.distLine}>
+                  📍 الوجهة على بعد {(haversineMeters(myPos, destination) / 1000).toFixed(1)} كم تقريبًا (خط مستقيم)
+                </T>
+              )}
               {routeError ? <T style={styles.errorText}>{routeError}</T> : null}
               <Pressable
                 style={[styles.primaryBtn, !destination && { opacity: 0.5 }]}
@@ -378,6 +401,7 @@ const styles = StyleSheet.create({
     color: colors.amber,
     textAlign: 'center',
   },
+  distLine: { fontFamily: FONTS.bold, fontSize: 13.5, color: colors.teal, textAlign: 'center' },
   primaryBtn: {
     backgroundColor: colors.teal,
     borderRadius: radius.lg,

@@ -45,21 +45,30 @@ function init(){
   if (typeof L === 'undefined') { document.getElementById('err').style.display='block'; return; }
   map = L.map('map', { zoomControl:false, attributionControl:true });
   L.control.zoom({ position:'bottomleft' }).addTo(map); // بعيد عن بانر التنبيهات فوق
-  // لو التايلز فشلت (مثلاً مفيش نت أو السيرفر رفض) بنشيلها ونظهر رسالة نضيفة
-  // بدل شاشة مليانة تايلز مكسورة — من غير ما نعيد المحاولة أو نغير المزود
-  var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  // لو التايلز الأساسية فشلت (مفيش نت أو السيرفر رفض) بنجرّب مصدر بديل مسموح
+  // (خادم OSM فرنسا: استخدام عام غير ربحي بحجم معتدل مع ذكر المصدر — مناسب لمشروعنا)
+  // ولو البديل فشل برضه بنشيل التايلز ونظهر رسالة نضيفة بدل تايلز مكسورة.
+  var noticeEl = document.getElementById('tile-err');
+  function watchTiles(layer, onDead){
+    var errs = 0, dead = false;
+    layer.on('tileerror', function(){
+      if (dead) return;
+      if (++errs >= 6) { dead = true; onDead(); }
+    });
+    return layer;
+  }
+  var fallbackTiles = L.tileLayer('https://tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors, rendu &copy; OpenStreetMap France'
   });
-  var tileErrs = 0, tilesGaveUp = false;
-  tiles.on('tileerror', function(){
-    if (tilesGaveUp) return;
-    if (++tileErrs >= 6) {
-      tilesGaveUp = true;
-      if (map) map.removeLayer(tiles);
-      var el = document.getElementById('tile-err');
-      if (el) el.style.display = 'block';
-      send({ type:'basemapUnavailable' });
-    }
+  watchTiles(fallbackTiles, function(){
+    if (map) map.removeLayer(fallbackTiles);
+    if (noticeEl) noticeEl.style.display = 'block';
+    send({ type:'basemapUnavailable' });
+  });
+  var tiles = watchTiles(L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  }), function(){
+    if (map) { map.removeLayer(tiles); fallbackTiles.addTo(map); }
   });
   tiles.addTo(map);
   map.setView([30.0444, 31.2357], 12); // القاهرة افتراضياً
@@ -110,6 +119,7 @@ function handle(msg){
   } else if (msg.type === 'me'){
     if (meMarker) map.removeLayer(meMarker);
     meMarker = L.marker([msg.lat, msg.lng], { icon: makeIcon('#3B82F6','','me') }).addTo(map);
+    if (msg.follow) map.panTo([msg.lat, msg.lng], { animate:true, duration:.6 });
   }
 }
 function onMsg(e){
