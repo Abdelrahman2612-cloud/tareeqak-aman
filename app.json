@@ -14,8 +14,6 @@
     },
     "android": {
       "package": "com.tareeqakaman.app",
-      "enableSeparateBuildPerCPUArchitecture": true,
-      "universalApk": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A1A2E"
@@ -44,8 +42,8 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],

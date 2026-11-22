@@ -37,6 +37,10 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <StatusBar style="light" />
+      {/* ممنوع رسم أي شاشة قبل ما خطوط Cairo تتحمّل: على أندرويد لو الشاشة اتعرضت
+          قبل الخط، قياس عرض النص بيتسجّل بخط النظام البديل ومش بيتحدّث بعد ما الخط
+          يوصل، فبيظهر قصّ في آخر الكلام العربي (شُوهد فعلًا على جهاز المستخدم) */}
+      {splashReady ? (
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.navy },
@@ -55,6 +59,7 @@ export default function RootLayout() {
         <Stack.Screen name="track" options={{ title: 'تتبع بلاغ' }} />
         <Stack.Screen name="admin" options={{ title: 'لوحة تحكم المشرفين' }} />
       </Stack>
+      ) : null}
       <BrandSplash ready={splashReady} />
     </AuthProvider>
   );
