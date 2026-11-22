@@ -6,8 +6,8 @@
 // ============================================================
 
 export const cloudinaryConfig = {
-  cloudName: 'PASTE_CLOUD_NAME_HERE',
-  uploadPreset: 'PASTE_UNSIGNED_PRESET_HERE',
+  cloudName: 'rbowd46v',
+  uploadPreset: 'tareeqak_reports',
 };
 
 export function isCloudinaryConfigured() {
