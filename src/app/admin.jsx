@@ -12,6 +12,7 @@ import {
 import { colors, radius, shadow, STATUS, STATUS_ORDER, CATEGORIES, CATEGORY_KEYS, SEVERITY_ORDER, formatDate, FONTS } from '../theme';
 import { listenToReports, updateReportStatus, deleteReport } from '../lib/db';
 import { isFirebaseConfigured } from '../config/firebase';
+import { getContactForUser } from '../lib/contacts';
 import { ADMIN_PIN } from '../config/admin';
 import { useAuth, signInWithEmail, signOut, authErrorMessage } from '../lib/auth';
 import { T } from '../components/T';
@@ -197,6 +198,18 @@ export default function AdminScreen() {
     }
   }
 
+  async function showContact(report) {
+    try {
+      const contact = await getContactForUser(report.userId);
+      Alert.alert('بيانات التواصل الخاصة', contact?.contactAllowed
+        ? `${contact.name}\n${contact.phone}\nرقم غير موثّق بكود SMS. للتواصل بخصوص البلاغ فقط.`
+        : 'مفيش رقم متاح للتواصل مع صاحب البلاغ.');
+    } catch (e) {
+      Alert.alert('تعذر عرض الرقم', String(e?.code || '').includes('permission-denied')
+        ? 'عرض بيانات التواصل متاح لحساب المسؤول فقط.' : 'تعذر تحميل بيانات التواصل. حاول تاني.');
+    }
+  }
+
   function confirmDelete(report) {
     Alert.alert('حذف البلاغ؟', `هيتم حذف البلاغ ${report.trackingCode} نهائيًا.`, [
       { text: 'إلغاء', style: 'cancel' },
@@ -298,6 +311,9 @@ export default function AdminScreen() {
               </View>
               {r.imageUrl ? <Image source={{ uri: r.imageUrl }} style={styles.itemImg} /> : null}
               {r.description ? <T style={styles.itemDesc} numberOfLines={3}>{r.description}</T> : null}
+              {r.userId && <Pressable style={styles.actionBtn} onPress={() => showContact(r)}>
+                <T style={{ color: colors.teal, fontFamily: FONTS.bold }}>عرض رقم التواصل للمسؤول</T>
+              </Pressable>}
               <View style={styles.actionsRow}>
                 {nextStatus && (
                   <Pressable
