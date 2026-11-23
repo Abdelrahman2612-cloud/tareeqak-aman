@@ -85,6 +85,7 @@ export default function HomeScreen() {
         'حسابك',
         user.displayName ? `${user.displayName}\n${user.email || ''}` : user.email || '',
         [
+          { text: 'بيانات التواصل', onPress: () => router.push('/auth') },
           { text: 'تسجيل الخروج', style: 'destructive', onPress: () => signOut() },
           { text: 'إلغاء', style: 'cancel' },
         ]
