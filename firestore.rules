@@ -8,13 +8,34 @@ service cloud.firestore {
       return 'PASTE_ADMIN_UID_HERE';
     }
 
+    // Separate private profile. Passwords remain exclusively in Firebase Auth.
+    match /reporterContacts/{uid} {
+      allow get: if request.auth != null &&
+        (request.auth.uid == uid || request.auth.uid == adminUid());
+      allow list: if false;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['name', 'phone', 'contactAllowed', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'phone', 'contactAllowed', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[+][1-9][0-9]{7,14}$')
+        && request.resource.data.contactAllowed == true
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
     // بلاغات الطريق
     match /reports/{reportId} {
       // القراءة للكل: الخريطة والتتبع والإحصائيات شغالة من غير تسجيل دخول
       allow read: if true;
 
       // الإنشاء للكل: أي حد يقدر يبلّغ عن مشكلة، حتى كضيف
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly([
+        'trackingCode', 'category', 'severity', 'description', 'imageUrl', 'location',
+        'status', 'statusHistory', 'userId', 'userName', 'createdAt', 'createdAtMillis'
+      ]) && (request.resource.data.userId == null ||
+        (request.auth != null && request.resource.data.userId == request.auth.uid));
 
       // التعديل والحذف لحساب المشرف بس
       // أي حساب تاني — حتى لو مسجل دخوله في التطبيق — قاعدة البيانات نفسها بترفضه
