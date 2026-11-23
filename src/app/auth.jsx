@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,12 +16,18 @@ import { colors, radius, shadow, FONTS } from '../theme';
 import { T } from '../components/T';
 import { PrimaryButton } from '../components/ui';
 import { Icon } from '../components/Icon';
-import { signInWithEmail, signUpWithEmail, authErrorMessage } from '../lib/auth';
+import { signInWithEmail, signUpWithEmail, authErrorMessage, useAuth, getAuthInstance } from '../lib/auth';
+import { saveMyContact, getContactForUser } from '../lib/contacts';
+import { normalizePhone } from '../lib/phone';
 import { isFirebaseConfigured } from '../config/firebase';
 
 export default function AuthScreen() {
   const router = useRouter();
   const configured = isFirebaseConfigured();
+  const { user } = useAuth();
+  const [phone, setPhone] = useState('');
+  const [contactAllowed, setContactAllowed] = useState(false);
+  const [needsContact, setNeedsContact] = useState(false);
   const [mode, setMode] = useState('login'); // login | signup
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,27 +35,53 @@ export default function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    if (user.displayName) setName(user.displayName);
+    getContactForUser(user.uid).then(contact => {
+      if (!active || !contact) return;
+      setName(contact.name || user.displayName || '');
+      setPhone(contact.phone || '');
+      setContactAllowed(contact.contactAllowed === true);
+    }).catch(() => { if (active) setError('تعذر تحميل بيانات التواصل. تقدر تحاول تاني.'); });
+    return () => { active = false; };
+  }, [user?.uid]);
+  const contactMode = !!user || needsContact;
+  const collectingContact = contactMode || mode === 'signup';
+
   async function submit() {
     if (busy) return;
     setError('');
-    if (!email.trim() || !password) {
+    if (!contactMode && (!email.trim() || !password)) {
       setError('اكتب البريد الإلكتروني وكلمة السر.');
       return;
     }
-    if (mode === 'signup' && !name.trim()) {
-      setError('اكتب اسمك عشان يظهر مع بلاغاتك.');
+    if (collectingContact && !name.trim()) {
+      setError('اكتب اسمك لإكمال بيانات الحساب.');
+      return;
+    }
+    if (collectingContact && contactAllowed && !normalizePhone(phone)) {
+      setError('اكتب رقم موبايل مصري صحيح، أو رقم دولي يبدأ بكود الدولة +.');
       return;
     }
     setBusy(true);
     try {
-      if (mode === 'login') {
+      if (contactMode) {
+        await saveMyContact(name, phone, contactAllowed);
+      } else if (mode === 'login') {
         await signInWithEmail(email, password);
       } else {
         await signUpWithEmail(name, email, password);
+        setNeedsContact(true);
+        setPassword('');
+        if (contactAllowed) await saveMyContact(name, phone, true);
       }
       router.back();
     } catch (e) {
-      setError(authErrorMessage(e));
+      setError(getAuthInstance()?.currentUser && collectingContact
+        ? 'الحساب موجود، لكن بيانات التواصل ماتحفظتش. حاول حفظها تاني. الرقم مش هيتنشر مع البلاغ.'
+        : authErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -73,7 +105,7 @@ export default function AuthScreen() {
             {/* كارت تسجيل الدخول */}
             <View style={styles.card}>
               {/* التبويبات */}
-              <View style={styles.tabs}>
+              {!contactMode && <View style={styles.tabs}>
                 <Pressable
                   style={[styles.tab, mode === 'signup' && styles.tabActive]}
                   onPress={() => { setMode('signup'); setError(''); }}
@@ -86,9 +118,9 @@ export default function AuthScreen() {
                 >
                   <T style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>تسجيل الدخول</T>
                 </Pressable>
-              </View>
+              </View>}
 
-              {mode === 'signup' && (
+              {collectingContact && (
                 <View style={styles.field}>
                   <T style={styles.label}>الاسم</T>
                   <TextInput
@@ -103,7 +135,7 @@ export default function AuthScreen() {
                 </View>
               )}
 
-              <View style={styles.field}>
+              {!contactMode && <><View style={styles.field}>
                 <T style={styles.label}>البريد الإلكتروني</T>
                 <TextInput
                   style={styles.input}
@@ -132,6 +164,23 @@ export default function AuthScreen() {
                 />
               </View>
 
+              </>}
+
+              {collectingContact && <>
+                <View style={styles.field}>
+                  <T style={styles.label}>رقم الموبايل للتواصل (اختياري)</T>
+                  <TextInput style={styles.input} value={phone} onChangeText={setPhone}
+                    keyboardType="phone-pad" textAlign="left" placeholder="01xxxxxxxxx"
+                    autoComplete="tel" maxLength={24} />
+                  <T style={styles.configNote}>لو وافقت على التواصل، الرقم يتحفظ للمسؤول فقط، من غير كود SMS.</T>
+                </View>
+                <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: contactAllowed }}
+                  onPress={() => setContactAllowed(v => !v)} disabled={busy}>
+                  <T style={styles.label}>{contactAllowed ? '☑' : '☐'} أوافق على التواصل معايا لمتابعة بلاغاتي. الرقم مش ظاهر للناس.</T>
+                </Pressable>
+                <T style={styles.configNote}>تقدر تسجل من غير موافقة. إلغاء الموافقة وحفظ البيانات يمسح رقم التواصل المحفوظ.</T>
+              </>}
+
               {error ? (
                 <View style={styles.errorBox}>
                   <T style={styles.errorText}>{error}</T>
@@ -139,7 +188,7 @@ export default function AuthScreen() {
               ) : null}
 
               <PrimaryButton
-                title={mode === 'login' ? 'دخول' : 'إنشاء الحساب'}
+                title={contactMode ? 'حفظ بيانات التواصل' : mode === 'login' ? 'دخول' : 'إنشاء الحساب'}
                 onPress={submit}
                 loading={busy}
                 disabled={!configured}
@@ -158,7 +207,7 @@ export default function AuthScreen() {
               {busy ? (
                 <ActivityIndicator color="#9FB3C8" />
               ) : (
-                <T style={styles.guestText}>المتابعة كضيف ←</T>
+                <T style={styles.guestText}>{contactMode ? 'رجوع من غير تعديل ←' : 'المتابعة كضيف ←'}</T>
               )}
             </Pressable>
 
@@ -173,7 +222,7 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.navy },
+  wrap: { flex: 1, minHeight: '100%', backgroundColor: colors.navy },
   scroll: { paddingHorizontal: 22, paddingBottom: 40 },
   hero: { alignItems: 'center', paddingTop: 28, paddingBottom: 26 },
   logoCircle: {
